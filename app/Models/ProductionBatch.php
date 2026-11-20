@@ -97,6 +97,9 @@ class ProductionBatch extends Model
         $shrinkageKg = max(0.0, round($usedWeightKg - $soldWeightKg, 2));
         $shrinkagePct = $usedWeightKg > 0 ? round(($shrinkageKg / $usedWeightKg) * 100, 2) : 0.0;
 
+        // HPP Daging Terjual: Modal kotor ayam keluar (setelah dikurangi sisa) dibagi total kg daging yang terjual di kasir
+        $hppPerKgSold = $soldWeightKg > 0 ? round($usedCost / $soldWeightKg, 2) : 0.0;
+
         // Keuntungan: omzet POS dikurangi modal kotor yang terpakai
         $profit = round($totalRevenue - $usedCost, 2);
         $profitMargin = $totalRevenue > 0 ? round(($profit / $totalRevenue) * 100, 1) : 0.0;
@@ -110,6 +113,7 @@ class ProductionBatch extends Model
             'remaining_cost' => $remainingCost,
             'shrinkage_kg' => $shrinkageKg,
             'shrinkage_pct' => $shrinkagePct,
+            'hpp_per_kg_sold' => $hppPerKgSold,
             'profit' => $profit,
             'profit_margin' => $profitMargin,
             'sales_count' => $sales->count(),

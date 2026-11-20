@@ -64,8 +64,8 @@
         </div>
     </div>
 
-    <!-- 2 Highlight Cards: Susut Bobot & Keuntungan -->
-    <div class="mb-6 grid gap-4 lg:grid-cols-2">
+    <!-- 3 Highlight Cards: Susut Bobot, HPP Daging Terjual, & Keuntungan -->
+    <div class="mb-6 grid gap-4 lg:grid-cols-3">
         <!-- Highlight 1: Penyusutan Bobot -->
         <section class="panel p-5 border-l-4 border-l-amber-500 min-w-0 overflow-hidden">
             <div class="flex items-center justify-between gap-2">
@@ -89,7 +89,32 @@
             </div>
         </section>
 
-        <!-- Highlight 2: Keuntungan Hari Ini -->
+        <!-- Highlight 2: HPP Daging Terjual -->
+        <section class="panel p-5 border-l-4 border-l-blue-600 min-w-0 overflow-hidden">
+            <div class="flex items-center justify-between gap-2">
+                <h2 class="text-sm font-bold text-brand-textDark truncate">HPP Daging Terjual</h2>
+                <span class="rounded-lg bg-blue-100 px-2.5 py-0.5 text-xs font-bold text-blue-800 shrink-0">
+                    Realistis
+                </span>
+            </div>
+            <div class="my-3 flex items-baseline gap-2 min-w-0">
+                <span class="card-fit-value-lg font-bold text-blue-700" title="{{ $posSummary['hpp_per_kg_sold'] > 0 ? 'Rp ' . number_format($posSummary['hpp_per_kg_sold'], 0, ',', '.') . ' / kg' : '-' }}">
+                    {{ $posSummary['hpp_per_kg_sold'] > 0 ? 'Rp ' . number_format($posSummary['hpp_per_kg_sold'], 0, ',', '.') . ' / kg' : '-' }}
+                </span>
+            </div>
+            <div class="rounded-lg bg-[#f8fafc] p-3 text-xs space-y-1.5 border border-[#e2e8f0]">
+                <div class="flex justify-between">
+                    <span class="text-brand-textGray">Modal ayam keluar:</span>
+                    <span class="font-medium text-brand-textDark">Rp {{ number_format($posSummary['used_cost'], 0, ',', '.') }}</span>
+                </div>
+                <div class="flex justify-between">
+                    <span class="text-brand-textGray">Rumus kalkulasi:</span>
+                    <span class="font-medium text-brand-textDark">Modal keluar ÷ Daging terjual</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- Highlight 3: Keuntungan Hari Ini -->
         <section class="panel p-5 border-l-4 {{ $posSummary['profit'] >= 0 ? 'border-l-emerald-500' : 'border-l-red-500' }} min-w-0 overflow-hidden">
             <div class="flex items-center justify-between gap-2">
                 <h2 class="text-sm font-bold text-brand-textDark truncate">Keuntungan Hari Ini</h2>

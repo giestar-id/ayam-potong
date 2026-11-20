@@ -48,7 +48,11 @@ class ProductService
     public function deleteProduct(Product $product): bool
     {
         if ($product->saleItems()->exists() || $product->productionOutputs()->exists()) {
-            throw new InvalidArgumentException('Produk tidak dapat dihapus karena sudah memiliki riwayat transaksi atau produksi.');
+            $product->is_active = false;
+            $product->save();
+            $this->invalidateCache();
+
+            return true;
         }
 
         $deleted = $product->delete();
@@ -58,21 +62,18 @@ class ProductService
     }
 
     /**
-     * Catat pembelian stok masuk langsung di menu produk (PRD 2.3 - Moving Weighted Average Cost)
-     * Rumus: HPP_baru = ((S_lama * HPP_lama) + C_masuk_total) / (S_lama + S_masuk)
+     * Catat penambahan stok produk potongan ayam atau pembelian stok langsung.
+     * Restok potongan ayam dari batch tidak membutuhkan modal HPP (totalCost = 0).
      */
     public function restock(
         Product $product,
         float $quantity,
-        float $totalCost,
+        float $totalCost = 0.0,
         ?string $notes = null,
         ?string $purchaseDate = null
     ): StockPurchase {
         if ($quantity <= 0) {
             throw new InvalidArgumentException('Kuantitas masuk harus lebih besar dari 0.');
-        }
-        if ($totalCost <= 0) {
-            throw new InvalidArgumentException('Total modal pembelian harus lebih besar dari 0.');
         }
 
         return DB::transaction(function () use ($product, $quantity, $totalCost, $notes, $purchaseDate) {
@@ -82,17 +83,15 @@ class ProductService
             $currentHpp = (float) $product->average_cost;
 
             $newStock = $currentStock + $quantity;
-            $costPerUnit = round($totalCost / $quantity, 2);
+            $costPerUnit = ($quantity > 0 && $totalCost > 0) ? round($totalCost / $quantity, 2) : 0.0;
 
-            // PRD 2.3 Moving Weighted Average Cost
-            if ($newStock > 0) {
-                $newAverageHpp = round((($currentStock * $currentHpp) + $totalCost) / $newStock, 2);
-            } else {
-                $newAverageHpp = $costPerUnit;
+            // Jika ada modal baru yang diinput, perbarui Moving Weighted Average HPP
+            if ($totalCost > 0) {
+                $newAverageHpp = $newStock > 0 ? round((($currentStock * $currentHpp) + $totalCost) / $newStock, 2) : $costPerUnit;
+                $product->average_cost = $newAverageHpp;
             }
 
             $product->stock = $newStock;
-            $product->average_cost = $newAverageHpp;
             $product->save();
 
             $date = $purchaseDate ? date('Y-m-d', strtotime($purchaseDate)) : now()->toDateString();
@@ -106,16 +105,18 @@ class ProductService
                 'purchase_date' => $date,
             ]);
 
-            // PRD 3.3 Integrasi Pengeluaran Otomatis
-            CashFlow::create([
-                'type' => 'expense',
-                'category' => 'stock_purchase',
-                'reference_type' => StockPurchase::class,
-                'reference_id' => $purchase->id,
-                'transaction_date' => $date,
-                'amount' => $totalCost,
-                'description' => "Belanja stok {$product->name}: {$quantity} {$product->unit} @ Rp ".number_format($costPerUnit, 0, ',', '.'),
-            ]);
+            // Hanya catat pengeluaran kas jika modal pembelian > 0 (bukan restok potongan ayam dari batch)
+            if ($totalCost > 0) {
+                CashFlow::create([
+                    'type' => 'expense',
+                    'category' => 'stock_purchase',
+                    'reference_type' => StockPurchase::class,
+                    'reference_id' => $purchase->id,
+                    'transaction_date' => $date,
+                    'amount' => $totalCost,
+                    'description' => "Belanja stok {$product->name}: {$quantity} {$product->unit} @ Rp ".number_format($costPerUnit, 0, ',', '.'),
+                ]);
+            }
 
             $this->invalidateCache();
 

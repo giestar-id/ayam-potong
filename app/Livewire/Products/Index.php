@@ -78,14 +78,12 @@ class Index extends Component
         ]);
 
         $product = Product::findOrFail($this->restockProductId);
-        $unitCost = $product->average_cost > 0 ? (float) $product->average_cost : 25000;
-        $totalCost = (float) $this->incomingCostTotal > 0 ? (float) $this->incomingCostTotal : round((float) $this->incomingQty * $unitCost);
 
         try {
             $productService->restock(
                 $product,
                 (float) $this->incomingQty,
-                $totalCost,
+                0.0,
                 $this->restockNotes ?: null
             );
 

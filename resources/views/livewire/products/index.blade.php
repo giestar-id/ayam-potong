@@ -36,8 +36,8 @@
                         <p class="mt-0.5 font-semibold">{{ number_format($currentStock, 2, ',', '.') }} {{ $restockUnit }}</p>
                     </div>
                     <div>
-                        <p class="text-[10px] text-brand-textGray">HPP saat ini</p>
-                        <p class="mt-0.5 font-semibold">Rp {{ number_format($currentHpp, 0, ',', '.') }}/{{ $restockUnit }}</p>
+                        <p class="text-[10px] text-brand-textGray">Satuan</p>
+                        <p class="mt-0.5 font-semibold">{{ $restockUnit === 'kg' ? 'Kilogram (kg)' : 'Ekor' }}</p>
                     </div>
                 </div>
 
@@ -50,11 +50,11 @@
 
                     <label class="field text-xs">
                         Catatan Restok (Opsional)
-                        <input wire:model="restockNotes" type="text" class="input text-xs" placeholder="Contoh: Restok pasar / supplier">
+                        <input wire:model="restockNotes" type="text" class="input text-xs" placeholder="Contoh: Hasil potong tambahan">
                     </label>
 
-                    <div class="mt-3 rounded-lg border border-emerald-200 bg-emerald-50 p-2.5 text-[11px] leading-tight text-emerald-800">
-                        Otomatis menambah stok produk & mencatat pengeluaran ke buku kas.
+                    <div class="mt-3 rounded-lg border border-blue-200 bg-blue-50 p-2.5 text-[11px] leading-tight text-blue-800">
+                        Menambah stok potongan ayam siap jual tanpa menambah biaya kas baru (modal telah tercatat di batch ayam hidup).
                     </div>
 
                     <div class="flex justify-end gap-2 pt-2 border-t border-brand-border">

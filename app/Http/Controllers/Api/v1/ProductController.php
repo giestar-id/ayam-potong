@@ -152,15 +152,13 @@ class ProductController extends Controller
 
         $validated = $request->validate([
             'quantity' => 'required|numeric|gt:0',
-            'total_cost' => 'nullable|numeric|gt:0',
+            'total_cost' => 'nullable|numeric|min:0',
             'notes' => 'nullable|string',
             'purchase_date' => 'nullable|date',
         ]);
 
         $quantity = (float) $validated['quantity'];
-        $totalCost = isset($validated['total_cost']) && (float) $validated['total_cost'] > 0
-            ? (float) $validated['total_cost']
-            : round($quantity * ((float) $product->average_cost > 0 ? (float) $product->average_cost : 25000), 2);
+        $totalCost = isset($validated['total_cost']) ? (float) $validated['total_cost'] : 0.0;
 
         $purchase = $this->productService->restock(
             $product,
@@ -172,7 +170,7 @@ class ProductController extends Controller
 
         return response()->json([
             'success' => true,
-            'message' => 'Restock berhasil dicatat. Stok dan HPP telah diperbarui.',
+            'message' => 'Restock berhasil dicatat. Stok telah diperbarui.',
             'data' => [
                 'purchase' => $purchase,
                 'product' => $product->fresh(),
