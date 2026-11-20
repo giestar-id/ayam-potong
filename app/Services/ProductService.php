@@ -48,13 +48,11 @@ class ProductService
     public function deleteProduct(Product $product, bool $force = false): bool
     {
         if (! $force && ($product->saleItems()->exists() || $product->productionOutputs()->exists())) {
-            if ($product->is_active) {
-                $product->is_active = false;
-                $product->save();
-                $this->invalidateCache();
+            $product->is_active = false;
+            $product->save();
+            $this->invalidateCache();
 
-                return true;
-            }
+            return true;
         }
 
         $deleted = $product->delete();

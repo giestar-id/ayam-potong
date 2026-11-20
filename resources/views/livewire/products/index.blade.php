@@ -83,14 +83,6 @@
                     <option value="ekor">Ekor</option>
                 </select>
             </label>
-            <label class="field">
-                Status
-                <select wire:model.live="status" class="input">
-                    <option value="">Semua status</option>
-                    <option value="active">Aktif</option>
-                    <option value="inactive">Nonaktif</option>
-                </select>
-            </label>
             <label class="flex min-h-10 items-center gap-2 text-xs">
                 <input wire:model.live="lowStockOnly" type="checkbox">
                 Hanya stok menipis
@@ -149,7 +141,7 @@
                                     <a href="{{ route('products.form', $product->id) }}" class="btn text-xs py-1 px-2.5">
                                         Detail
                                     </a>
-                                    <button type="button" wire:click="deleteProduct({{ $product->id }})" wire:confirm="Hapus produk ini dari daftar aktif?" class="btn btn-danger text-xs py-1 px-2.5">
+                                    <button type="button" wire:click="deleteProduct({{ $product->id }})" wire:confirm="Apakah Anda yakin ingin menghapus produk ini dari katalog?" class="btn btn-danger text-xs py-1 px-2.5">
                                         Hapus
                                     </button>
                                     @endcan

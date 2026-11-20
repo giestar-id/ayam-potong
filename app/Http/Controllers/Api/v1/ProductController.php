@@ -26,11 +26,7 @@ class ProductController extends Controller
             });
         }
 
-        if ($request->has('is_active')) {
-            $query->where('is_active', filter_var($request->query('is_active'), FILTER_VALIDATE_BOOLEAN));
-        } elseif (! $request->boolean('include_inactive')) {
-            $query->where('is_active', true);
-        }
+        $query->where('is_active', true);
 
         $products = $query->orderBy('name', 'asc')->get();
 
@@ -131,15 +127,20 @@ class ProductController extends Controller
             ], 403);
         }
 
-        $product = Product::findOrFail($id);
+        $product = Product::find($id);
+        if (! $product) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Produk sudah tidak ada di katalog.',
+            ]);
+        }
 
         try {
-            $force = $request->boolean('force') || ! $product->is_active;
-            $this->productService->deleteProduct($product, $force);
+            $this->productService->deleteProduct($product);
 
             return response()->json([
                 'success' => true,
-                'message' => 'Produk berhasil dihapus.',
+                'message' => 'Produk berhasil dihapus dari katalog.',
             ]);
         } catch (\Exception $e) {
             return response()->json([

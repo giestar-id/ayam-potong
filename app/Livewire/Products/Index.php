@@ -107,9 +107,8 @@ class Index extends Component
         $this->authorize('owner');
         $product = Product::findOrFail($productId);
         try {
-            $force = ! $product->is_active;
-            $productService->deleteProduct($product, $force);
-            session()->flash('success', 'Produk berhasil dihapus.');
+            $productService->deleteProduct($product);
+            session()->flash('success', 'Produk berhasil dihapus dari katalog.');
         } catch (\Exception $e) {
             session()->flash('error', $e->getMessage());
         }
@@ -122,19 +121,13 @@ class Index extends Component
 
     public function render(): View
     {
-        $query = Product::query();
+        $query = Product::where('is_active', true);
 
         if ($this->search !== '') {
             $query->where(function ($q) {
                 $q->where('name', 'like', "%{$this->search}%")
                     ->orWhere('sku', 'like', "%{$this->search}%");
             });
-        }
-
-        if ($this->status === 'active') {
-            $query->where('is_active', true);
-        } elseif ($this->status === 'inactive') {
-            $query->where('is_active', false);
         }
 
         if ($this->lowStock) {
@@ -155,9 +148,9 @@ class Index extends Component
 
         return view('livewire.products.index', [
             'products' => $products,
-            'totalProduk' => Product::count(),
-            'totalStokKg' => Product::where('unit', 'kg')->sum('stock'),
-            'totalStokEkor' => Product::where('unit', 'ekor')->sum('stock'),
+            'totalProduk' => Product::where('is_active', true)->count(),
+            'totalStokKg' => Product::where('is_active', true)->where('unit', 'kg')->sum('stock'),
+            'totalStokEkor' => Product::where('is_active', true)->where('unit', 'ekor')->sum('stock'),
             'produkMenipis' => Product::where('is_active', true)->whereRaw('stock <= min_stock')->count(),
             'previewNewHpp' => $previewNewHpp,
             'previewNewStock' => $previewNewStock,
