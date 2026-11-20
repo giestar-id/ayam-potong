@@ -17,11 +17,12 @@
             <div class="grid gap-5 sm:grid-cols-2">
                 <div>
                     <label for="batch_number" class="block text-xs font-semibold text-slate-700 mb-1.5">
-                        Nomor / kode batch *
+                        Nama / kode batch (Opsional)
                     </label>
                     <div class="relative flex items-center rounded-lg border border-slate-300 bg-white px-3 py-2 shadow-sm transition focus-within:border-brand-primary focus-within:ring-2 focus-within:ring-brand-primary/20">
-                        <input id="batch_number" wire:model="batch_number" class="w-full border-0 bg-transparent p-0 font-mono text-sm font-semibold text-brand-textDark placeholder:font-normal placeholder:text-slate-400 outline-none focus:outline-none focus:ring-0" required>
+                        <input id="batch_number" wire:model="batch_number" placeholder="Default: nama hari, YYYY-MM-DD" class="w-full border-0 bg-transparent p-0 font-mono text-sm font-semibold text-brand-textDark placeholder:font-normal placeholder:text-slate-400 outline-none focus:outline-none focus:ring-0">
                     </div>
+                    <p class="mt-1 text-[11px] text-slate-500">Bisa dikustomisasi. Jika dikosongkan, default: nama hari, tahun-bulan-tanggal.</p>
                     @error('batch_number') <span class="mt-1 block text-xs text-red-600">{{ $message }}</span> @enderror
                 </div>
 

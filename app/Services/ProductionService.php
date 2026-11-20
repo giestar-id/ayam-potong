@@ -6,18 +6,36 @@ use App\Models\CashFlow;
 use App\Models\Product;
 use App\Models\ProductionBatch;
 use App\Models\ProductionOutput;
+use Carbon\Carbon;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use InvalidArgumentException;
 
 class ProductionService
 {
-    public function generateBatchNumber(): string
+    public function generateBatchNumber(?string $date = null): string
     {
-        $dateStr = now()->format('Ymd');
-        $countToday = ProductionBatch::whereDate('created_at', now()->toDateString())->count() + 1;
+        $d = $date ? Carbon::parse($date) : now();
+        $dayNames = [
+            'Sunday' => 'Minggu',
+            'Monday' => 'Senin',
+            'Tuesday' => 'Selasa',
+            'Wednesday' => 'Rabu',
+            'Thursday' => 'Kamis',
+            'Friday' => 'Jumat',
+            'Saturday' => 'Sabtu',
+        ];
+        $dayName = $dayNames[$d->format('l')] ?? $d->format('l');
+        $dateFormatted = $d->format('Y-m-d');
+        $baseName = "{$dayName}, {$dateFormatted}";
 
-        return 'BATCH-'.$dateStr.'-'.str_pad((string) $countToday, 3, '0', STR_PAD_LEFT);
+        if (ProductionBatch::where('batch_number', $baseName)->exists()) {
+            $count = ProductionBatch::where('batch_number', 'like', "{$baseName}%")->count() + 1;
+
+            return "{$baseName} #{$count}";
+        }
+
+        return $baseName;
     }
 
     public function createBatch(array $data): ProductionBatch
@@ -37,8 +55,14 @@ class ProductionService
         }
 
         $remainingWeight = (float) ($data['remaining_weight_kg'] ?? 0);
-        $batchNumber = $data['batch_number'] ?? $this->generateBatchNumber();
         $date = $data['production_date'] ?? now()->toDateString();
+        $rawBatchNumber = ! empty($data['batch_number']) ? trim($data['batch_number']) : null;
+        $batchNumber = $rawBatchNumber ?: $this->generateBatchNumber($date);
+
+        if (ProductionBatch::where('batch_number', $batchNumber)->exists()) {
+            $count = ProductionBatch::where('batch_number', 'like', "{$batchNumber}%")->count() + 1;
+            $batchNumber = "{$batchNumber} #{$count}";
+        }
 
         $batch = ProductionBatch::create([
             'batch_number' => $batchNumber,
@@ -186,6 +210,21 @@ class ProductionService
             $this->invalidateCache();
 
             return $batch->fresh('outputs.product');
+        });
+    }
+
+    public function deleteBatch(ProductionBatch $batch): bool
+    {
+        return DB::transaction(function () use ($batch) {
+            CashFlow::where('reference_type', ProductionBatch::class)
+                ->where('reference_id', $batch->id)
+                ->delete();
+
+            $batch->outputs()->delete();
+            $deleted = $batch->delete();
+            $this->invalidateCache();
+
+            return (bool) $deleted;
         });
     }
 

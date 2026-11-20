@@ -72,7 +72,7 @@ class Form extends Component
         $this->production_date = now()->toDateString();
 
         $this->validate([
-            'batch_number' => 'required|string|unique:production_batches,batch_number',
+            'batch_number' => 'nullable|string|max:100',
             'production_date' => 'nullable|date',
             'live_weight_kg' => 'required|numeric|gt:0',
             'total_cost' => 'required|numeric|gt:0',
@@ -88,8 +88,10 @@ class Form extends Component
         $total = (float) $this->total_cost;
         $pricePerKg = round($total / $weight, 2);
 
+        $customBatchNumber = trim($this->batch_number) !== '' ? trim($this->batch_number) : null;
+
         $batch = $productionService->createBatch([
-            'batch_number' => $this->batch_number,
+            'batch_number' => $customBatchNumber,
             'production_date' => $this->production_date,
             'live_weight_kg' => $weight,
             'buy_price_per_kg' => $pricePerKg,

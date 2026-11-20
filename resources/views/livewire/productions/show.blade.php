@@ -13,7 +13,17 @@
             </div>
             <p class="text-xs text-brand-textGray mt-1">Tanggal produksi: {{ $batch->production_date ? $batch->production_date->translatedFormat('d F Y') : '-' }}</p>
         </div>
-        <a href="{{ route('productions.index') }}" class="btn">Kembali ke daftar batch</a>
+        <div class="flex items-center gap-2">
+            <button
+                type="button"
+                wire:click="deleteBatch"
+                wire:confirm="Yakin ingin menghapus batch {{ $batch->batch_number }}? Seluruh data kas modal dan alokasi output terkait akan dihapus permanen."
+                class="btn btn-danger"
+            >
+                Hapus Batch
+            </button>
+            <a href="{{ route('productions.index') }}" class="btn">Kembali ke daftar batch</a>
+        </div>
     </div>
     <x-feedback/>
 

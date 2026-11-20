@@ -139,4 +139,23 @@ class ProductionController extends Controller
             ], 422);
         }
     }
+
+    public function destroy(Request $request, int $id): JsonResponse
+    {
+        $batch = ProductionBatch::findOrFail($id);
+
+        try {
+            $this->productionService->deleteBatch($batch);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Batch produksi berhasil dihapus.',
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => $e->getMessage(),
+            ], 422);
+        }
+    }
 }

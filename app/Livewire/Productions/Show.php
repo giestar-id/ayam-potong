@@ -114,6 +114,18 @@ class Show extends Component
         }
     }
 
+    public function deleteBatch(ProductionService $productionService): mixed
+    {
+        $batch = ProductionBatch::findOrFail($this->batchId);
+        $batchNumber = $batch->batch_number;
+
+        $productionService->deleteBatch($batch);
+
+        session()->flash('success', "Batch {$batchNumber} berhasil dihapus.");
+
+        return redirect()->route('productions.index');
+    }
+
     public function render(): View
     {
         $batch = ProductionBatch::with(['outputs.product'])->findOrFail($this->batchId);

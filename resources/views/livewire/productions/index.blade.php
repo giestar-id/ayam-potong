@@ -154,6 +154,9 @@
                                     <a href="{{ route('productions.show', $batch->id) }}" class="btn text-xs py-1 px-2.5 btn-primary">
                                         Detail batch
                                     </a>
+                                    <button type="button" wire:click="deleteBatch({{ $batch->id }})" wire:confirm="Hapus batch produksi {{ $batch->batch_number }}?" class="btn btn-danger text-xs py-1 px-2.5">
+                                        Hapus
+                                    </button>
                                 </div>
                             </td>
                         </tr>

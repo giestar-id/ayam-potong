@@ -79,6 +79,19 @@ class Index extends Component
         session()->flash('success', "Sisa ayam batch {$batch->batch_number} berhasil diperbarui menjadi {$weight} kg.");
     }
 
+    public function deleteBatch(int $batchId, ProductionService $productionService): void
+    {
+        $batch = ProductionBatch::findOrFail($batchId);
+        $batchNumber = $batch->batch_number;
+
+        try {
+            $productionService->deleteBatch($batch);
+            session()->flash('success', "Batch produksi {$batchNumber} berhasil dihapus.");
+        } catch (\Exception $e) {
+            session()->flash('error', $e->getMessage());
+        }
+    }
+
     public function render(): View
     {
         $query = ProductionBatch::with(['outputs.product']);
