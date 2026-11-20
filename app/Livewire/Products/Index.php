@@ -19,7 +19,7 @@ class Index extends Component
     public string $search = '';
 
     #[Url]
-    public string $status = '';
+    public string $status = 'active';
 
     #[Url]
     public bool $lowStock = false;
@@ -107,7 +107,8 @@ class Index extends Component
         $this->authorize('owner');
         $product = Product::findOrFail($productId);
         try {
-            $productService->deleteProduct($product);
+            $force = ! $product->is_active;
+            $productService->deleteProduct($product, $force);
             session()->flash('success', 'Produk berhasil dihapus.');
         } catch (\Exception $e) {
             session()->flash('error', $e->getMessage());

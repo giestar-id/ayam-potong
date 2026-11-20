@@ -45,14 +45,16 @@ class ProductService
         return $product;
     }
 
-    public function deleteProduct(Product $product): bool
+    public function deleteProduct(Product $product, bool $force = false): bool
     {
-        if ($product->saleItems()->exists() || $product->productionOutputs()->exists()) {
-            $product->is_active = false;
-            $product->save();
-            $this->invalidateCache();
+        if (! $force && ($product->saleItems()->exists() || $product->productionOutputs()->exists())) {
+            if ($product->is_active) {
+                $product->is_active = false;
+                $product->save();
+                $this->invalidateCache();
 
-            return true;
+                return true;
+            }
         }
 
         $deleted = $product->delete();

@@ -28,6 +28,8 @@ class ProductController extends Controller
 
         if ($request->has('is_active')) {
             $query->where('is_active', filter_var($request->query('is_active'), FILTER_VALIDATE_BOOLEAN));
+        } elseif (! $request->boolean('include_inactive')) {
+            $query->where('is_active', true);
         }
 
         $products = $query->orderBy('name', 'asc')->get();
@@ -132,7 +134,8 @@ class ProductController extends Controller
         $product = Product::findOrFail($id);
 
         try {
-            $this->productService->deleteProduct($product);
+            $force = $request->boolean('force') || ! $product->is_active;
+            $this->productService->deleteProduct($product, $force);
 
             return response()->json([
                 'success' => true,
