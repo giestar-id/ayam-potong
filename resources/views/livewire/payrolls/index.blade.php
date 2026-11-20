@@ -129,10 +129,10 @@
                 <div class="flex items-center justify-between px-4 pt-3 text-[11px] text-brand-textGray border-b border-[#eaeef2] pb-2">
                     <span class="font-semibold text-brand-textDark">Set hari kerja:</span>
                     <div class="flex items-center gap-1">
-                        <button type="button" wire:click="setAllCartDays(6)" class="rounded bg-slate-100 px-1.5 py-0.5 font-medium text-slate-700 hover:bg-slate-200">6 hr</button>
-                        <button type="button" wire:click="setAllCartDays(7)" class="rounded bg-slate-100 px-1.5 py-0.5 font-medium text-slate-700 hover:bg-slate-200">7 hr</button>
-                        <button type="button" wire:click="setAllCartDays(26)" class="rounded bg-slate-100 px-1.5 py-0.5 font-medium text-slate-700 hover:bg-slate-200">26 hr</button>
-                        <button type="button" wire:click="setAllCartDays(30)" class="rounded bg-blue-100 px-1.5 py-0.5 font-bold text-brand-primary hover:bg-blue-200">30 hr</button>
+                        <button type="button" wire:click="setAllCartDays(6)" class="rounded px-1.5 py-0.5 text-xs font-semibold transition-colors {{ $activeDayPreset === 6 ? 'bg-brand-primary text-white' : 'bg-slate-100 text-slate-700 hover:bg-slate-200' }}">6 hr</button>
+                        <button type="button" wire:click="setAllCartDays(7)" class="rounded px-1.5 py-0.5 text-xs font-semibold transition-colors {{ $activeDayPreset === 7 ? 'bg-brand-primary text-white' : 'bg-slate-100 text-slate-700 hover:bg-slate-200' }}">7 hr</button>
+                        <button type="button" wire:click="setAllCartDays(26)" class="rounded px-1.5 py-0.5 text-xs font-semibold transition-colors {{ $activeDayPreset === 26 ? 'bg-brand-primary text-white' : 'bg-slate-100 text-slate-700 hover:bg-slate-200' }}">26 hr</button>
+                        <button type="button" wire:click="setAllCartDays(30)" class="rounded px-1.5 py-0.5 text-xs font-semibold transition-colors {{ $activeDayPreset === 30 ? 'bg-brand-primary text-white' : 'bg-slate-100 text-slate-700 hover:bg-slate-200' }}">30 hr</button>
                     </div>
                 </div>
             @endif
@@ -194,16 +194,16 @@
                         <span class="text-[10px] text-brand-textGray">Shortcut:</span>
                     </div>
                     <div class="flex items-center gap-1.5 mb-2">
-                        <button type="button" wire:click="setPeriodShortcut(7)" class="rounded-lg border border-slate-200 bg-white px-2.5 py-1 text-[11px] font-semibold text-slate-700 hover:border-brand-primary hover:text-brand-primary hover:bg-blue-50 transition-colors">
+                        <button type="button" wire:click="setPeriodShortcut(7)" class="rounded-lg border px-2.5 py-1 text-[11px] font-semibold transition-colors {{ $activeShortcut === '7' ? 'border-brand-primary bg-brand-primary text-white' : 'border-slate-200 bg-white text-slate-700 hover:border-brand-primary hover:text-brand-primary hover:bg-blue-50' }}">
                             7 Hari
                         </button>
-                        <button type="button" wire:click="setPeriodShortcut(14)" class="rounded-lg border border-slate-200 bg-white px-2.5 py-1 text-[11px] font-semibold text-slate-700 hover:border-brand-primary hover:text-brand-primary hover:bg-blue-50 transition-colors">
+                        <button type="button" wire:click="setPeriodShortcut(14)" class="rounded-lg border px-2.5 py-1 text-[11px] font-semibold transition-colors {{ $activeShortcut === '14' ? 'border-brand-primary bg-brand-primary text-white' : 'border-slate-200 bg-white text-slate-700 hover:border-brand-primary hover:text-brand-primary hover:bg-blue-50' }}">
                             14 Hari
                         </button>
-                        <button type="button" wire:click="setPeriodShortcut(30)" class="rounded-lg border border-blue-200 bg-blue-50 px-2.5 py-1 text-[11px] font-bold text-brand-primary hover:bg-blue-100 transition-colors">
+                        <button type="button" wire:click="setPeriodShortcut(30)" class="rounded-lg border px-2.5 py-1 text-[11px] font-semibold transition-colors {{ $activeShortcut === '30' ? 'border-brand-primary bg-brand-primary text-white' : 'border-slate-200 bg-white text-slate-700 hover:border-brand-primary hover:text-brand-primary hover:bg-blue-50' }}">
                             30 Hari
                         </button>
-                        <button type="button" wire:click="setPeriodShortcut('month')" class="rounded-lg border border-slate-200 bg-white px-2.5 py-1 text-[11px] font-semibold text-slate-700 hover:border-brand-primary hover:text-brand-primary hover:bg-blue-50 transition-colors">
+                        <button type="button" wire:click="setPeriodShortcut('month')" class="rounded-lg border px-2.5 py-1 text-[11px] font-semibold transition-colors {{ $activeShortcut === 'month' ? 'border-brand-primary bg-brand-primary text-white' : 'border-slate-200 bg-white text-slate-700 hover:border-brand-primary hover:text-brand-primary hover:bg-blue-50' }}">
                             Bulan Ini
                         </button>
                     </div>

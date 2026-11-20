@@ -28,6 +28,10 @@ class Index extends Component
 
     public string $notes = '';
 
+    public string $activeShortcut = '7';
+
+    public ?int $activeDayPreset = 6;
+
     // Filters for employee card list
     public string $employeeSearch = '';
 
@@ -92,6 +96,7 @@ class Index extends Component
 
     public function incrementDays(int $employeeId, float $amount = 1): void
     {
+        $this->activeDayPreset = null;
         if (isset($this->cart[$employeeId])) {
             $current = (float) ($this->cart[$employeeId]['days'] ?? 0);
             $this->cart[$employeeId]['days'] = min(31, $current + $amount);
@@ -100,6 +105,7 @@ class Index extends Component
 
     public function decrementDays(int $employeeId, float $amount = 1): void
     {
+        $this->activeDayPreset = null;
         if (isset($this->cart[$employeeId])) {
             $current = (float) ($this->cart[$employeeId]['days'] ?? 0);
             $this->cart[$employeeId]['days'] = max(0.5, $current - $amount);
@@ -109,6 +115,7 @@ class Index extends Component
     public function setPeriodShortcut(int|string $days): void
     {
         $today = now();
+        $this->activeShortcut = (string) $days;
         $this->payment_date = $today->toDateString();
         $this->period_end = $today->toDateString();
 
@@ -121,6 +128,7 @@ class Index extends Component
             $targetDays = min(31, $daysInt);
         }
 
+        $this->activeDayPreset = $targetDays;
         foreach ($this->cart as $empId => $item) {
             $this->cart[$empId]['days'] = $targetDays;
         }
@@ -128,6 +136,7 @@ class Index extends Component
 
     public function setAllCartDays(float $days): void
     {
+        $this->activeDayPreset = (int) $days;
         foreach ($this->cart as $empId => $item) {
             $this->cart[$empId]['days'] = min(31, max(0.5, $days));
         }
