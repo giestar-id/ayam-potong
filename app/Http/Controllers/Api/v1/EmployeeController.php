@@ -62,6 +62,12 @@ class EmployeeController extends Controller
             ], 403);
         }
 
+        // Normalisasi format jika dikirim teks berformat mata uang / titik ribuan
+        if ($request->has('daily_rate') && is_string($request->input('daily_rate'))) {
+            $raw = preg_replace('/[^\d]/', '', (string) $request->input('daily_rate'));
+            $request->merge(['daily_rate' => $raw !== '' ? (float) $raw : 0]);
+        }
+
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'phone' => 'required|string|max:30|unique:users,phone',
@@ -120,6 +126,12 @@ class EmployeeController extends Controller
         }
 
         $employee = Employee::findOrFail($id);
+
+        // Normalisasi format jika dikirim teks berformat mata uang / titik ribuan
+        if ($request->has('daily_rate') && is_string($request->input('daily_rate'))) {
+            $raw = preg_replace('/[^\d]/', '', (string) $request->input('daily_rate'));
+            $request->merge(['daily_rate' => $raw !== '' ? (float) $raw : 0]);
+        }
 
         $validated = $request->validate([
             'name' => 'required|string|max:255',

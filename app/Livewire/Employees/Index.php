@@ -73,6 +73,12 @@ class Index extends Component
     {
         $this->authorize('owner');
 
+        // Normalisasi format gaji jika terdapat titik/koma/Rp
+        if (is_string($this->daily_rate)) {
+            $cleaned = preg_replace('/[^\d]/', '', $this->daily_rate);
+            $this->daily_rate = $cleaned !== '' ? (float) $cleaned : 0;
+        }
+
         $emp = $this->employeeId ? Employee::find($this->employeeId) : null;
         $userId = $emp?->user_id;
 
