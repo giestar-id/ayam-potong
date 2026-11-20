@@ -32,7 +32,7 @@ class PayrollService
             $dailyRate = (float) $employee->daily_rate;
             $totalSalary = round($daysWorked * $dailyRate, 2);
 
-            $date = $paymentDate ? date('Y-m-d', strtotime($paymentDate)) : now()->toDateString();
+            $date = ! empty($paymentDate) ? date('Y-m-d', strtotime($paymentDate)) : now()->toDateString();
 
             $payroll = Payroll::create([
                 'employee_id' => $employee->id,
@@ -53,7 +53,7 @@ class PayrollService
                 'reference_id' => $payroll->id,
                 'transaction_date' => $date,
                 'amount' => $totalSalary,
-                'description' => "Gaji mingguan {$employee->name} ({$daysWorked} hari kerja @ Rp ".number_format($dailyRate, 0, ',', '.').')',
+                'description' => "Gaji {$employee->name} ({$daysWorked} hari kerja @ Rp ".number_format($dailyRate, 0, ',', '.').')',
             ]);
 
             $this->invalidateCache();

@@ -189,13 +189,6 @@
                 </div>
                 @error('period_end') <span class="text-[11px] text-red-600">{{ $message }}</span> @enderror
 
-                <div class="grid grid-cols-2 gap-2 text-xs">
-                    <label class="field col-span-2">
-                        Tanggal pembayaran kas *
-                        <input wire:model="payment_date" type="date" class="input text-xs" required>
-                    </label>
-                </div>
-
                 <label class="field text-xs">
                     Catatan slip gaji (opsional)
                     <input wire:model="notes" class="input text-xs" placeholder="Contoh: Gaji minggu ke-3">

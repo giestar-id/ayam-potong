@@ -108,12 +108,14 @@ class Index extends Component
 
     public function checkout(PayrollService $payrollService): void
     {
+        $this->payment_date = now()->toDateString();
+
         $this->validate([
             'cart' => 'required|array|min:1',
             'cart.*.days' => 'required|numeric|gt:0|max:31',
             'period_start' => 'required|date',
             'period_end' => 'required|date|after_or_equal:period_start',
-            'payment_date' => 'required|date',
+            'payment_date' => 'nullable|date',
             'notes' => 'nullable|string|max:500',
         ], [
             'cart.required' => 'Pilih minimal satu karyawan untuk pembayaran gaji.',

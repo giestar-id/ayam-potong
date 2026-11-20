@@ -64,7 +64,9 @@ class PayrollController extends Controller
                 'payment_date' => 'nullable|date',
             ]);
 
-            $createdPayrolls = DB::transaction(function () use ($validated) {
+            $paymentDate = ! empty($validated['payment_date']) ? $validated['payment_date'] : now()->toDateString();
+
+            $createdPayrolls = DB::transaction(function () use ($validated, $paymentDate) {
                 $payrolls = [];
                 foreach ($validated['items'] as $item) {
                     $employee = Employee::findOrFail($item['employee_id']);
@@ -74,7 +76,7 @@ class PayrollController extends Controller
                         $validated['period_start'],
                         $validated['period_end'],
                         $validated['notes'] ?? null,
-                        $validated['payment_date'] ?? null
+                        $paymentDate
                     );
                 }
 
@@ -98,6 +100,7 @@ class PayrollController extends Controller
         ]);
 
         $employee = Employee::findOrFail($validated['employee_id']);
+        $paymentDate = ! empty($validated['payment_date']) ? $validated['payment_date'] : now()->toDateString();
 
         $payroll = $this->payrollService->createPayroll(
             $employee,
@@ -105,7 +108,7 @@ class PayrollController extends Controller
             $validated['period_start'],
             $validated['period_end'],
             $validated['notes'] ?? null,
-            $validated['payment_date'] ?? null
+            $paymentDate
         );
 
         return response()->json([
