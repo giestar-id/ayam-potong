@@ -23,9 +23,9 @@ class Payroll extends Model
     protected function casts(): array
     {
         return [
-            'payment_date' => 'date',
-            'period_start' => 'date',
-            'period_end' => 'date',
+            'payment_date' => 'date:Y-m-d',
+            'period_start' => 'date:Y-m-d',
+            'period_end' => 'date:Y-m-d',
             'days_worked' => 'decimal:1',
             'daily_rate_snapshot' => 'decimal:2',
             'total_salary' => 'decimal:2',

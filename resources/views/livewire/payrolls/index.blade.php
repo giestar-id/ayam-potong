@@ -285,7 +285,11 @@
                                 {{ $p->payment_date ? $p->payment_date->translatedFormat('d/m/Y') : '-' }}
                             </td>
                             <td class="whitespace-nowrap text-xs text-brand-textGray">
-                                {{ $p->period_start ? $p->period_start->translatedFormat('d/m') : '-' }} s/d {{ $p->period_end ? $p->period_end->translatedFormat('d/m/Y') : '-' }}
+                                @if($p->period_start && $p->period_end && $p->period_start->isSameDay($p->period_end))
+                                    {{ $p->period_start->translatedFormat('d M Y') }}
+                                @else
+                                    {{ $p->period_start ? $p->period_start->translatedFormat('d/m') : '-' }} s/d {{ $p->period_end ? $p->period_end->translatedFormat('d/m/Y') : '-' }}
+                                @endif
                             </td>
                             <td class="whitespace-nowrap text-center font-medium">
                                 {{ (float)$p->days_worked }} hari
