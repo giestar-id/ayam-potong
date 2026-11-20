@@ -28,8 +28,6 @@ class Index extends Component
 
     public string $notes = '';
 
-    public string $activeShortcut = '7';
-
     public ?int $activeDayPreset = 6;
 
     // Filters for employee card list
@@ -109,28 +107,6 @@ class Index extends Component
         if (isset($this->cart[$employeeId])) {
             $current = (float) ($this->cart[$employeeId]['days'] ?? 0);
             $this->cart[$employeeId]['days'] = max(0.5, $current - $amount);
-        }
-    }
-
-    public function setPeriodShortcut(int|string $days): void
-    {
-        $today = now();
-        $this->activeShortcut = (string) $days;
-        $this->payment_date = $today->toDateString();
-        $this->period_end = $today->toDateString();
-
-        if ($days === 'month') {
-            $this->period_start = $today->copy()->startOfMonth()->toDateString();
-            $targetDays = min(31, $today->day);
-        } else {
-            $daysInt = (int) $days;
-            $this->period_start = $today->copy()->subDays($daysInt - 1)->toDateString();
-            $targetDays = min(31, $daysInt);
-        }
-
-        $this->activeDayPreset = $targetDays;
-        foreach ($this->cart as $empId => $item) {
-            $this->cart[$empId]['days'] = $targetDays;
         }
     }
 

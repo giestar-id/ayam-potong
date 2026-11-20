@@ -188,27 +188,6 @@
 
             <!-- Form Parameter & Checkout -->
             <form wire:submit="checkout" class="border-t border-[#eaeef2] bg-[#f8fbff] p-4 sm:p-5 space-y-3">
-                <div>
-                    <div class="mb-1.5 flex items-center justify-between text-xs">
-                        <span class="font-semibold text-brand-textDark">Periode kerja:</span>
-                        <span class="text-[10px] text-brand-textGray">Shortcut:</span>
-                    </div>
-                    <div class="flex items-center gap-1.5 mb-2">
-                        <button type="button" wire:click="setPeriodShortcut(7)" class="rounded-lg border px-2.5 py-1 text-[11px] font-semibold transition-colors {{ $activeShortcut === '7' ? 'border-brand-primary bg-brand-primary text-white' : 'border-slate-200 bg-white text-slate-700 hover:border-brand-primary hover:text-brand-primary hover:bg-blue-50' }}">
-                            7 Hari
-                        </button>
-                        <button type="button" wire:click="setPeriodShortcut(14)" class="rounded-lg border px-2.5 py-1 text-[11px] font-semibold transition-colors {{ $activeShortcut === '14' ? 'border-brand-primary bg-brand-primary text-white' : 'border-slate-200 bg-white text-slate-700 hover:border-brand-primary hover:text-brand-primary hover:bg-blue-50' }}">
-                            14 Hari
-                        </button>
-                        <button type="button" wire:click="setPeriodShortcut(30)" class="rounded-lg border px-2.5 py-1 text-[11px] font-semibold transition-colors {{ $activeShortcut === '30' ? 'border-brand-primary bg-brand-primary text-white' : 'border-slate-200 bg-white text-slate-700 hover:border-brand-primary hover:text-brand-primary hover:bg-blue-50' }}">
-                            30 Hari
-                        </button>
-                        <button type="button" wire:click="setPeriodShortcut('month')" class="rounded-lg border px-2.5 py-1 text-[11px] font-semibold transition-colors {{ $activeShortcut === 'month' ? 'border-brand-primary bg-brand-primary text-white' : 'border-slate-200 bg-white text-slate-700 hover:border-brand-primary hover:text-brand-primary hover:bg-blue-50' }}">
-                            Bulan Ini
-                        </button>
-                    </div>
-                </div>
-
                 <div class="grid grid-cols-2 gap-2 text-xs">
                     <label class="field">
                         Periode dari *
