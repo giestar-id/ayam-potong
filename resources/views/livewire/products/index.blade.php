@@ -108,9 +108,6 @@
                         <tr wire:key="product-{{ $product->id }}">
                             <td>
                                 <a href="{{ route('products.form', $product->id) }}" class="font-semibold text-brand-primary">{{ $product->name }}</a>
-                                @if($product->sku)
-                                    <p class="mt-0.5 text-[10px] text-brand-textGray">{{ $product->sku }}</p>
-                                @endif
                             </td>
                             <td>{{ $product->unit === 'kg' ? 'Kilogram (kg)' : 'Ekor' }}</td>
                             <td class="text-right font-semibold">
