@@ -106,6 +106,33 @@ class Index extends Component
         }
     }
 
+    public function setPeriodShortcut(int|string $days): void
+    {
+        $today = now();
+        $this->payment_date = $today->toDateString();
+        $this->period_end = $today->toDateString();
+
+        if ($days === 'month') {
+            $this->period_start = $today->copy()->startOfMonth()->toDateString();
+            $targetDays = min(31, $today->day);
+        } else {
+            $daysInt = (int) $days;
+            $this->period_start = $today->copy()->subDays($daysInt - 1)->toDateString();
+            $targetDays = min(31, $daysInt);
+        }
+
+        foreach ($this->cart as $empId => $item) {
+            $this->cart[$empId]['days'] = $targetDays;
+        }
+    }
+
+    public function setAllCartDays(float $days): void
+    {
+        foreach ($this->cart as $empId => $item) {
+            $this->cart[$empId]['days'] = min(31, max(0.5, $days));
+        }
+    }
+
     public function checkout(PayrollService $payrollService): void
     {
         $this->payment_date = now()->toDateString();

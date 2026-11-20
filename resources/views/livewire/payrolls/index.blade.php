@@ -125,6 +125,17 @@
             </div>
 
             <!-- List Karyawan Terpilih di Keranjang -->
+            @if(count($cart) > 0)
+                <div class="flex items-center justify-between px-4 pt-3 text-[11px] text-brand-textGray border-b border-[#eaeef2] pb-2">
+                    <span class="font-semibold text-brand-textDark">Set hari kerja:</span>
+                    <div class="flex items-center gap-1">
+                        <button type="button" wire:click="setAllCartDays(6)" class="rounded bg-slate-100 px-1.5 py-0.5 font-medium text-slate-700 hover:bg-slate-200">6 hr</button>
+                        <button type="button" wire:click="setAllCartDays(7)" class="rounded bg-slate-100 px-1.5 py-0.5 font-medium text-slate-700 hover:bg-slate-200">7 hr</button>
+                        <button type="button" wire:click="setAllCartDays(26)" class="rounded bg-slate-100 px-1.5 py-0.5 font-medium text-slate-700 hover:bg-slate-200">26 hr</button>
+                        <button type="button" wire:click="setAllCartDays(30)" class="rounded bg-blue-100 px-1.5 py-0.5 font-bold text-brand-primary hover:bg-blue-200">30 hr</button>
+                    </div>
+                </div>
+            @endif
             <div class="max-h-72 overflow-y-auto divide-y divide-[#eaeef2] p-4 sm:p-5">
                 @forelse($cartLines as $empId => $item)
                     <div wire:key="cart-item-{{ $empId }}" class="py-3 first:pt-0 last:pb-0">
@@ -177,6 +188,27 @@
 
             <!-- Form Parameter & Checkout -->
             <form wire:submit="checkout" class="border-t border-[#eaeef2] bg-[#f8fbff] p-4 sm:p-5 space-y-3">
+                <div>
+                    <div class="mb-1.5 flex items-center justify-between text-xs">
+                        <span class="font-semibold text-brand-textDark">Periode kerja:</span>
+                        <span class="text-[10px] text-brand-textGray">Shortcut:</span>
+                    </div>
+                    <div class="flex items-center gap-1.5 mb-2">
+                        <button type="button" wire:click="setPeriodShortcut(7)" class="rounded-lg border border-slate-200 bg-white px-2.5 py-1 text-[11px] font-semibold text-slate-700 hover:border-brand-primary hover:text-brand-primary hover:bg-blue-50 transition-colors">
+                            7 Hari
+                        </button>
+                        <button type="button" wire:click="setPeriodShortcut(14)" class="rounded-lg border border-slate-200 bg-white px-2.5 py-1 text-[11px] font-semibold text-slate-700 hover:border-brand-primary hover:text-brand-primary hover:bg-blue-50 transition-colors">
+                            14 Hari
+                        </button>
+                        <button type="button" wire:click="setPeriodShortcut(30)" class="rounded-lg border border-blue-200 bg-blue-50 px-2.5 py-1 text-[11px] font-bold text-brand-primary hover:bg-blue-100 transition-colors">
+                            30 Hari
+                        </button>
+                        <button type="button" wire:click="setPeriodShortcut('month')" class="rounded-lg border border-slate-200 bg-white px-2.5 py-1 text-[11px] font-semibold text-slate-700 hover:border-brand-primary hover:text-brand-primary hover:bg-blue-50 transition-colors">
+                            Bulan Ini
+                        </button>
+                    </div>
+                </div>
+
                 <div class="grid grid-cols-2 gap-2 text-xs">
                     <label class="field">
                         Periode dari *
