@@ -31,7 +31,7 @@
                     </div>
 
                     <div class="form-group mb-0">
-                        <label for="modal_remaining_weight" class="form-label text-xs">Sisa ayam malam ini (kg) <span class="text-red-500">*</span></label>
+                        <label for="modal_remaining_weight" class="form-label text-xs">Sisa ayam (kg) <span class="text-red-500">*</span></label>
                         <div class="relative">
                             <input
                                 type="number"
@@ -82,7 +82,7 @@
                 </select>
             </label>
             <p class="ml-auto text-xs text-brand-textGray self-center">
-                * Update sisa ayam (kg) setiap malam untuk menghitung penyusutan dan keuntungan harian otomatis.
+                * Update sisa ayam (kg) untuk menghitung penyusutan dan keuntungan harian otomatis.
             </p>
         </div>
 

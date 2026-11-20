@@ -30,9 +30,9 @@
             </div>
         </div>
 
-        <!-- Card 2: Sisa Malam -->
+        <!-- Card 2: Sisa Ayam -->
         <div class="panel p-5 min-w-0 overflow-hidden flex flex-col justify-between">
-            <span class="text-xs font-semibold text-brand-textDark truncate">Sisa Malam</span>
+            <span class="text-xs font-semibold text-brand-textDark truncate">Sisa Ayam</span>
             <div class="my-2">
                 <p class="card-fit-value text-brand-textDark font-bold" title="Rp {{ number_format($posSummary['remaining_cost'], 0, ',', '.') }}">Rp {{ number_format($posSummary['remaining_cost'], 0, ',', '.') }}</p>
                 <p class="text-xs font-medium text-brand-textGray mt-0.5 truncate" title="{{ number_format($batch->remaining_weight_kg, 1, ',', '.') }} kg">
@@ -140,9 +140,9 @@
         </section>
     </div>
 
-    <!-- Section Form Update Sisa Ayam Malam Hari (Simpel, Bersih, Tanpa Tabel Ribet) -->
+    <!-- Section Form Update Sisa Ayam (Simpel, Bersih, Tanpa Tabel Ribet) -->
     <section class="panel p-6 bg-[#fbfcfe] border border-blue-200 max-w-xl">
-        <h2 class="text-sm font-bold text-brand-primary">Update Sisa Ayam Malam Hari</h2>
+        <h2 class="text-sm font-bold text-brand-primary">Update Sisa Ayam</h2>
         <form wire:submit="updateRemaining" class="mt-4 space-y-4">
             <label class="field">
                 Sisa ayam (kg) *
@@ -153,7 +153,7 @@
             </label>
 
             <button type="submit" class="btn btn-primary" wire:loading.attr="disabled">
-                <x-icon name="check"/>Simpan Sisa Malam
+                <x-icon name="check"/>Simpan Sisa Ayam
             </button>
         </form>
     </section>

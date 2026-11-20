@@ -13,7 +13,7 @@
         <x-stat label="Omzet kasir hari ini" :value="'Rp ' . number_format($todayRevenue, 0, ',', '.')" :note="number_format($todaySoldKg, 1, ',', '.') . ' kg terjual hari ini'" icon="sales"/>
         <x-stat label="Modal kotor terpakai" :value="'Rp ' . number_format($usedBatchCost, 0, ',', '.')" :note="number_format($usedBatchKg, 1, ',', '.') . ' kg ayam keluar (awal - sisa)'" icon="box"/>
         <x-stat label="Keuntungan hari ini" :value="'Rp ' . number_format($profitToday, 0, ',', '.')" note="Laba kotor = omzet - modal keluar" icon="wallet"/>
-        <x-stat label="Sisa modal ayam" :value="'Rp ' . number_format($remainingBatchCost, 0, ',', '.')" :note="number_format($remainingBatchKg, 1, ',', '.') . ' kg sisa malam tersimpan'" icon="leaf"/>
+        <x-stat label="Sisa modal ayam" :value="'Rp ' . number_format($remainingBatchCost, 0, ',', '.')" :note="number_format($remainingBatchKg, 1, ',', '.') . ' kg sisa tersimpan'" icon="leaf"/>
     </div>
 
     <!-- Modal Catat Pembayaran Piutang (PRD 3.5) -->

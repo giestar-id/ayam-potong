@@ -105,7 +105,7 @@
                     <strong class="text-brand-textDark">2. Penjualan Harian:</strong> Transaksi kasir POS otomatis terhitung mengurangi stok dan menghasilkan omzet.
                 </p>
                 <p>
-                    <strong class="text-brand-textDark">3. Update Sisa Tiap Malam:</strong> Setiap malam, cukup timbang sisa ayam (kg) dan klik tombol update pada daftar batch.
+                    <strong class="text-brand-textDark">3. Update Sisa Ayam:</strong> Cukup timbang sisa ayam (kg) dan klik tombol update pada daftar batch.
                 </p>
                 <p>
                     <strong class="text-brand-textDark">4. Pantau Penyusutan & Laba:</strong> Sistem otomatis menghitung susut kilo dan keuntungan bersih harian.
