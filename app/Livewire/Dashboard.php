@@ -2,10 +2,6 @@
 
 namespace App\Livewire;
 
-use App\Models\CashFlow;
-use App\Models\Product;
-use App\Models\ProductionBatch;
-use App\Models\Sale;
 use App\Services\CashFlowService;
 use Illuminate\View\View;
 use Livewire\Attributes\Layout;
@@ -15,7 +11,9 @@ use Livewire\Component;
 class Dashboard extends Component
 {
     public string $period = 'month'; // 'today', 'week', 'month', 'custom'
+
     public string $from = '';
+
     public string $to = '';
 
     public function mount(): void

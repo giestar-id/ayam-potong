@@ -3,7 +3,6 @@
         <div>
             <p class="eyebrow">Keuangan</p>
             <h1 class="page-title">{{ $direction === 'Pengeluaran' ? 'Pengeluaran kas' : 'Pemasukan kas' }}</h1>
-            <p class="page-description">Catatan kas berdasarkan tanggal uang diterima atau dibayarkan secara otomatis dan manual.</p>
         </div>
         <div class="flex items-center gap-2">
             <button type="button" wire:click="openManualModal('{{ $direction === 'Pengeluaran' ? 'expense' : 'income' }}')" class="btn btn-primary">

@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api\v1;
 
 use App\Http\Controllers\Controller;
 use App\Models\BusinessSetting;
+use App\Models\Customer;
 use App\Models\Sale;
 use App\Services\TransactionService;
 use Illuminate\Http\JsonResponse;
@@ -17,9 +18,47 @@ class PosController extends Controller
 
     public function checkout(Request $request): JsonResponse
     {
+        // Idempotency check for offline sync or network re-try: prevent duplicate transaction and double stock deduction
+        $idempotencyKey = $request->input('idempotency_key') ?? $request->input('offline_invoice_number');
+        if (! empty($idempotencyKey)) {
+            $key = trim($idempotencyKey);
+            $existing = Sale::where('notes', 'like', "%{$key}%")->first();
+            if ($existing) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Transaksi ini sudah pernah tersinkron ke server.',
+                    'data' => [
+                        'sale' => $existing->load(['customer', 'items.product']),
+                    ],
+                ]);
+            }
+        }
+
+        // Resiliency: if customer was deleted on server during offline period, gracefully fallback or recreate placeholder
+        if ($request->filled('customer_id') && ! Customer::where('id', $request->customer_id)->exists()) {
+            $missingCustId = $request->customer_id;
+            $fallbackCustomer = Customer::firstOrCreate(
+                ['name' => "Pelanggan Terhapus (ID #{$missingCustId})"],
+                [
+                    'phone' => '-',
+                    'address' => 'Auto-generated fallback untuk transaksi offline',
+                    'discount_type' => 'none',
+                    'discount_value' => 0,
+                ]
+            );
+
+            $request->merge([
+                'customer_id' => $fallbackCustomer->id,
+                'due_date' => $request->due_date ?? now()->addDays(7)->toDateString(),
+                'notes' => trim(($request->notes ?? '')." [Pelanggan offline ID #{$missingCustId} telah dihapus di server]"),
+            ]);
+        }
+
         $validated = $request->validate([
             'customer_id' => 'nullable|exists:customers,id',
             'transaction_date' => 'nullable|date',
+            'idempotency_key' => 'nullable|string|max:100',
+            'offline_invoice_number' => 'nullable|string|max:100',
             'items' => 'required|array|min:1',
             'items.*.product_id' => 'required|exists:products,id',
             'items.*.quantity' => 'required|numeric|gt:0',
@@ -31,6 +70,14 @@ class PosController extends Controller
             'due_date' => 'nullable|date',
             'notes' => 'nullable|string',
         ]);
+
+        if (! empty($idempotencyKey)) {
+            $key = trim($idempotencyKey);
+            $currentNotes = $validated['notes'] ?? '';
+            if (! str_contains($currentNotes, $key)) {
+                $validated['notes'] = trim($currentNotes." [REF:{$key}]");
+            }
+        }
 
         try {
             $sale = $this->transactionService->createSale($validated, $request->user());

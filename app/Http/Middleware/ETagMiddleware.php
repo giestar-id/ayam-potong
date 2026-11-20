@@ -16,7 +16,7 @@ class ETagMiddleware
         $response = $next($request);
 
         // Only evaluate ETags for successful GET / HEAD responses
-        if (!in_array($request->method(), ['GET', 'HEAD']) || $response->getStatusCode() !== 200) {
+        if (! in_array($request->method(), ['GET', 'HEAD']) || $response->getStatusCode() !== 200) {
             return $response;
         }
 
@@ -26,7 +26,7 @@ class ETagMiddleware
         }
 
         // Generate ETag hash based on output payload
-        $etag = '"' . md5($content) . '"';
+        $etag = '"'.md5($content).'"';
         $response->headers->set('ETag', $etag);
 
         // Check if client sent If-None-Match header

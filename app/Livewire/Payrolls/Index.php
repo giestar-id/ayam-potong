@@ -21,8 +21,11 @@ class Index extends Component
     public array $cart = [];
 
     public string $period_start = '';
+
     public string $period_end = '';
+
     public string $payment_date = '';
+
     public string $notes = '';
 
     // Filters for employee card list
@@ -30,13 +33,16 @@ class Index extends Component
 
     // Filters for history table
     public string $historyEmployeeFilter = '';
+
     public string $historyDateFrom = '';
+
     public string $historyDateTo = '';
 
     public int $perPage = 20;
 
     public function mount(): void
     {
+        $this->authorize('owner');
         $this->period_start = now()->startOfWeek()->toDateString();
         $this->period_end = now()->endOfWeek()->toDateString();
         $this->payment_date = now()->toDateString();
@@ -123,6 +129,7 @@ class Index extends Component
 
         if ($employees->isEmpty()) {
             session()->flash('error', 'Karyawan yang dipilih tidak ditemukan.');
+
             return;
         }
 
@@ -159,9 +166,9 @@ class Index extends Component
             $this->clearCart();
             $this->notes = '';
 
-            session()->flash('success', "Gaji {$count} pekerja berhasil dibayar (Total Rp " . number_format($totalPaid, 0, ',', '.') . ") dan otomatis tercatat pada Buku Kas!");
+            session()->flash('success', "Gaji {$count} pekerja berhasil dibayar (Total Rp ".number_format($totalPaid, 0, ',', '.').') dan otomatis tercatat pada Buku Kas!');
         } catch (\Exception $e) {
-            session()->flash('error', 'Gagal memproses penggajian: ' . $e->getMessage());
+            session()->flash('error', 'Gagal memproses penggajian: '.$e->getMessage());
         }
     }
 

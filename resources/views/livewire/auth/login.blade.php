@@ -40,13 +40,13 @@
         </div>
         <p class="eyebrow">Masuk ke Ruang Kerja</p>
         <h1 class="page-title">Selamat Datang Kembali</h1>
-        <p class="mb-7 mt-3 text-sm leading-6 text-brand-textGray">Silakan masuk menggunakan akun pemilik usaha untuk mengakses sistem.</p>
+        <p class="mb-7 mt-3 text-sm leading-6 text-brand-textGray">Silakan masuk menggunakan nomor HP atau email akun Anda (Owner atau Pegawai) untuk mengakses sistem.</p>
 
         <form wire:submit="login" class="space-y-5">
             <div>
                 <label class="field" for="email">
-                    Alamat Email
-                    <input id="email" wire:model="email" type="email" class="input" required autofocus autocomplete="username" placeholder="admin@ayampotong.com">
+                    Nomor HP / Email
+                    <input id="email" wire:model="email" type="text" class="input" required autofocus autocomplete="username" placeholder="08xxxxxxxxxx atau email@...">
                 </label>
                 @error('email') <span class="text-[11px] text-rose-600 mt-1 block">{{ $message }}</span> @enderror
             </div>

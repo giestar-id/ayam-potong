@@ -22,7 +22,7 @@ class ProductController extends Controller
             $search = $request->query('search');
             $query->where(function ($q) use ($search) {
                 $q->where('name', 'like', "%{$search}%")
-                  ->orWhere('sku', 'like', "%{$search}%");
+                    ->orWhere('sku', 'like', "%{$search}%");
             });
         }
 
@@ -50,6 +50,13 @@ class ProductController extends Controller
 
     public function store(Request $request): JsonResponse
     {
+        if (! $request->user()?->isOwner()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Hanya pemilik (Owner) yang memiliki hak akses untuk menambahkan produk katalog.',
+            ], 403);
+        }
+
         $validated = $request->validate([
             'sku' => 'nullable|string|max:50|unique:products,sku',
             'name' => 'required|string|max:255',
@@ -60,6 +67,20 @@ class ProductController extends Controller
             'selling_price' => 'required|numeric|min:0',
             'is_active' => 'nullable|boolean',
         ]);
+
+        // Cegah duplikasi produk jika nama dan satuan sama
+        $trimmedName = trim($validated['name']);
+        $existing = Product::whereRaw('LOWER(name) = ?', [strtolower($trimmedName)])
+            ->where('unit', $validated['unit'])
+            ->first();
+
+        if ($existing) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Produk dengan nama tersebut sudah ada di katalog.',
+                'data' => $existing,
+            ], 200);
+        }
 
         $product = $this->productService->createProduct($validated);
 
@@ -72,10 +93,17 @@ class ProductController extends Controller
 
     public function update(Request $request, int $id): JsonResponse
     {
+        if (! $request->user()?->isOwner()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Hanya pemilik (Owner) yang memiliki hak akses untuk mengubah data produk katalog.',
+            ], 403);
+        }
+
         $product = Product::findOrFail($id);
 
         $validated = $request->validate([
-            'sku' => 'nullable|string|max:50|unique:products,sku,' . $product->id,
+            'sku' => 'nullable|string|max:50|unique:products,sku,'.$product->id,
             'name' => 'required|string|max:255',
             'unit' => 'required|in:kg,ekor',
             'min_stock' => 'nullable|numeric|min:0',
@@ -92,8 +120,15 @@ class ProductController extends Controller
         ]);
     }
 
-    public function destroy(int $id): JsonResponse
+    public function destroy(Request $request, int $id): JsonResponse
     {
+        if (! $request->user()?->isOwner()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Hanya pemilik (Owner) yang memiliki hak akses untuk menghapus produk katalog.',
+            ], 403);
+        }
+
         $product = Product::findOrFail($id);
 
         try {

@@ -14,21 +14,28 @@ class Settings extends Component
 {
     // Business Settings
     public string $business_name = '';
+
     public string $address = '';
+
     public string $phone = '';
+
     public string $receipt_footer = '';
 
     // Profile Settings
     public string $name = '';
+
     public string $email = '';
 
     // Password Settings
     public string $current_password = '';
+
     public string $new_password = '';
+
     public string $new_password_confirmation = '';
 
     public function mount(): void
     {
+        $this->authorize('owner');
         $biz = BusinessSetting::current();
         $this->business_name = $biz->business_name;
         $this->address = (string) ($biz->address ?? '');
@@ -67,7 +74,7 @@ class Settings extends Component
     {
         $this->validate([
             'name' => 'required|string|max:255',
-            'email' => 'required|email|max:255|unique:users,email,' . Auth::id(),
+            'email' => 'required|email|max:255|unique:users,email,'.Auth::id(),
         ]);
 
         Auth::user()->update([

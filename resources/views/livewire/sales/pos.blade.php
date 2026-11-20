@@ -3,7 +3,6 @@
         <div>
             <p class="eyebrow">Point of sale</p>
             <h1 class="page-title">Transaksi kasir baru</h1>
-            <p class="page-description">Pilih produk ayam potong, sesuaikan kuantitas desimal, lalu selesaikan pembayaran.</p>
         </div>
         <a href="{{ route('sales.index') }}" class="btn"><x-icon name="clock"/>Riwayat penjualan</a>
     </div>
@@ -32,17 +31,9 @@
         <!-- Product Catalog Section -->
         <section class="panel overflow-hidden">
             <div class="filters">
-                <label class="field min-w-40 flex-1">
+                <label class="field flex-1">
                     Cari produk
                     <input wire:model.live.debounce.300ms="search" class="input" placeholder="Nama atau kode produk...">
-                </label>
-                <label class="field">
-                    Satuan
-                    <select wire:model.live="selectedUnit" class="input">
-                        <option value="">Semua satuan</option>
-                        <option value="kg">Kilogram (kg)</option>
-                        <option value="ekor">Ekor</option>
-                    </select>
                 </label>
             </div>
 

@@ -2,158 +2,134 @@
     <div class="page-heading">
         <div>
             <div class="flex items-center gap-3">
-                <span class="font-mono text-lg font-bold text-brand-primary">{{ $batch->batch_number }}</span>
+                <span class="font-mono text-xl font-bold text-brand-primary">{{ $batch->batch_number }}</span>
                 @if($batch->status === 'active')
-                    <span class="badge badge-warning">Dalam proses</span>
+                    <span class="badge badge-warning">Aktif</span>
                 @elseif($batch->status === 'completed')
-                    <span class="badge">Selesai (Sudah masuk stok)</span>
+                    <span class="badge">Selesai</span>
                 @else
                     <span class="badge badge-danger">Batal</span>
                 @endif
             </div>
-            <p class="page-description mt-1">Tanggal: {{ $batch->production_date ? $batch->production_date->translatedFormat('d F Y') : '-' }} · Input hasil timbang, pantau rendemen/susut, dan sinkronisasi ke stok.</p>
+            <p class="text-xs text-brand-textGray mt-1">Tanggal produksi: {{ $batch->production_date ? $batch->production_date->translatedFormat('d F Y') : '-' }}</p>
         </div>
         <a href="{{ route('productions.index') }}" class="btn">Kembali ke daftar batch</a>
     </div>
     <x-feedback/>
 
-    <!-- 4 Metrik Batch -->
+    <!-- 4 Kartu Ringkasan Finansial & Timbangan Batch -->
     <div class="mb-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        <x-stat label="Berat ayam hidup (kotor)" :value="number_format($batch->live_weight_kg, 1, ',', '.') . ' kg'" :note="$batch->live_bird_count ? $batch->live_bird_count . ' ekor' : 'Tanpa data ekor'" icon="box"/>
-        <x-stat label="Hasil timbang bersih" :value="($batch->status === 'completed' ? number_format($batch->total_output_weight_kg, 2, ',', '.') : number_format($totalCleanWeight, 2, ',', '.')) . ' kg'" :note="'Rendemen: ' . ($batch->status === 'completed' ? $batch->yield_percentage : $yieldPct) . '%'" icon="leaf"/>
-        <x-stat label="Penyusutan bobot (susut)" :value="($batch->status === 'completed' ? number_format($batch->shrinkage_kg, 2, ',', '.') : number_format($shrinkageKg, 2, ',', '.')) . ' kg'" :note="'Susut: ' . ($batch->status === 'completed' ? round((($batch->shrinkage_kg / max(1, $batch->live_weight_kg)) * 100), 2) : $shrinkagePct) . '%'" icon="clock"/>
-        <x-stat label="Total modal batch" :value="'Rp ' . number_format($totalBatchCost, 0, ',', '.')" :note="'HPP karkas: Rp ' . number_format($batchHppPerKg, 0, ',', '.') . ' / kg'" icon="wallet"/>
-    </div>
-
-    @if($batch->status === 'active')
-        <!-- Formulir Input Timbang Hasil Potongan (PRD 3.2) -->
-        <div class="grid items-start gap-6 lg:grid-cols-12 mb-8">
-            <!-- Kolom Kiri: Input Tabel Potongan (8 Kolom) -->
-            <section class="panel p-6 lg:col-span-8">
-                <div class="mb-4">
-                    <h2 class="text-base font-semibold">Input hasil timbangan potongan ayam</h2>
-                    <p class="mt-1 text-xs text-brand-textGray">Masukkan rincian berat (kg) atau jumlah (ekor) untuk setiap produk yang dihasilkan dari batch ini.</p>
-                </div>
-
-                <div class="divide-y divide-[#eaeef2]">
-                    @foreach($breakdown as $index => $item)
-                        <div class="flex items-center justify-between py-3">
-                            <div class="min-w-0 pr-3">
-                                <p class="text-xs font-semibold text-brand-textDark">{{ $item['product_name'] }}</p>
-                                <span class="rounded bg-[#f0f4f8] px-2 py-0.5 text-[10px] text-brand-textGray">Satuan: {{ $item['unit'] }}</span>
-                            </div>
-                            <div class="w-44">
-                                <div class="flex items-center gap-1.5">
-                                    <input wire:model.live.debounce.300ms="breakdown.{{ $index }}.output_qty" type="number" step="0.01" class="input text-right font-semibold text-sm" placeholder="0">
-                                    <span class="text-xs font-semibold text-brand-textGray w-10 text-right">{{ $item['unit'] }}</span>
-                                </div>
-                            </div>
-                        </div>
-                    @endforeach
-                </div>
-            </section>
-
-            <!-- Kolom Kanan: Rangkuman & Selesaikan (4 Kolom) -->
-            <div class="space-y-6 lg:col-span-4">
-                <!-- Biaya Tambahan Operasional -->
-                <section class="panel p-5 space-y-4">
-                    <h3 class="text-sm font-semibold">Biaya operasional batch</h3>
-                    <div>
-                        <span class="text-xs text-brand-textGray">Modal beli ayam hidup:</span>
-                        <p class="text-sm font-semibold text-brand-textDark">Rp {{ number_format($batch->raw_material_cost, 0, ',', '.') }}</p>
-                    </div>
-
-                    <label class="field">
-                        Biaya operasional tambahan (Rp)
-                        <input wire:model.live.debounce.300ms="additional_cost" type="number" step="1000" class="input font-semibold" placeholder="0">
-                    </label>
-                    <span class="text-[11px] leading-5 text-brand-textGray">Contoh: biaya es batu, kantong plastik, atau upah potong harian batch ini.</span>
-
-                    <label class="field">
-                        Catatan batch
-                        <textarea wire:model="notes" rows="2" class="input" placeholder="Catatan supplier, berat susut dll."></textarea>
-                    </label>
-
-                    <button wire:click="updateAdditionalCost" type="button" class="btn w-full text-xs">Simpan catatan & biaya</button>
-                </section>
-
-                <!-- Box Selesaikan Batch -->
-                <section class="panel p-5 bg-[#f6fafe] border border-[#d8e2ff] space-y-4">
-                    <h3 class="text-sm font-semibold text-brand-primary">Rangkuman batch</h3>
-                    <div class="space-y-2 text-xs">
-                        <div class="flex justify-between">
-                            <span class="text-brand-textGray">Berat hidup:</span>
-                            <span class="font-semibold">{{ number_format($batch->live_weight_kg, 1, ',', '.') }} kg</span>
-                        </div>
-                        <div class="flex justify-between">
-                            <span class="text-brand-textGray">Hasil timbang bersih:</span>
-                            <span class="font-semibold text-brand-primary">{{ number_format($totalCleanWeight, 2, ',', '.') }} kg</span>
-                        </div>
-                        <div class="flex justify-between">
-                            <span class="text-brand-textGray">Susut bobot:</span>
-                            <span class="font-semibold text-red-700">-{{ number_format($shrinkageKg, 2, ',', '.') }} kg ({{ $shrinkagePct }}%)</span>
-                        </div>
-                        <div class="flex justify-between border-t border-blue-200 pt-2 font-bold text-brand-primary">
-                            <span>Estimasi HPP rata-rata:</span>
-                            <span>Rp {{ number_format($batchHppPerKg, 0, ',', '.') }} / kg</span>
-                        </div>
-                    </div>
-
-                    <p class="text-[11px] leading-5 text-brand-textGray">
-                        Ketika diselesaikan: seluruh hasil timbangan akan ditambahkan ke stok produk, HPP produk diperbarui secara moving average, dan biaya dicatat otomatis ke menu Pengeluaran.
-                    </p>
-
-                    <button wire:click="completeProduction" wire:confirm="Apakah Anda yakin seluruh timbangan sudah benar? Setelah diselesaikan, batch tidak dapat diedit ulang." class="btn btn-primary w-full">
-                        <x-icon name="check"/>Selesaikan & masukkan ke stok
-                    </button>
-                </section>
+        <!-- Card 1: Modal Beli Awal -->
+        <div class="panel p-5 min-w-0 overflow-hidden flex flex-col justify-between">
+            <span class="text-xs font-semibold text-brand-textDark truncate">Modal Beli Awal</span>
+            <div class="my-2">
+                <p class="card-fit-value text-brand-textDark font-bold" title="Rp {{ number_format($batch->raw_material_cost, 0, ',', '.') }}">Rp {{ number_format($batch->raw_material_cost, 0, ',', '.') }}</p>
+                <p class="text-xs font-medium text-brand-textGray mt-0.5 truncate" title="{{ number_format($batch->live_weight_kg, 1, ',', '.') }} kg">
+                    {{ number_format($batch->live_weight_kg, 1, ',', '.') }} kg (Rp {{ number_format($batch->effective_buy_price_per_kg, 0, ',', '.') }}/kg)
+                </p>
             </div>
         </div>
-    @else
-        <!-- Tampilan Batch yang Sudah Selesai (Locked) -->
-        <section class="panel overflow-hidden mb-8">
-            <div class="border-b border-[#eaeef2] p-5 bg-[#f0f9ff]">
-                <div class="flex items-center justify-between">
-                    <div>
-                        <h2 class="text-base font-semibold text-brand-primary">Rincian hasil pemotongan (Selesai)</h2>
-                        <p class="mt-1 text-xs text-brand-textGray">Seluruh hasil timbangan telah ditambahkan ke persediaan produk dan biaya tercatat di arus kas.</p>
-                    </div>
-                    <span class="badge">Selesai & terkunci</span>
+
+        <!-- Card 2: Sisa Malam -->
+        <div class="panel p-5 min-w-0 overflow-hidden flex flex-col justify-between">
+            <span class="text-xs font-semibold text-brand-textDark truncate">Sisa Malam</span>
+            <div class="my-2">
+                <p class="card-fit-value text-brand-textDark font-bold" title="Rp {{ number_format($posSummary['remaining_cost'], 0, ',', '.') }}">Rp {{ number_format($posSummary['remaining_cost'], 0, ',', '.') }}</p>
+                <p class="text-xs font-medium text-brand-textGray mt-0.5 truncate" title="{{ number_format($batch->remaining_weight_kg, 1, ',', '.') }} kg">
+                    {{ number_format($batch->remaining_weight_kg, 1, ',', '.') }} kg
+                </p>
+            </div>
+        </div>
+
+        <!-- Card 3: Ayam Keluar -->
+        <div class="panel p-5 min-w-0 overflow-hidden flex flex-col justify-between">
+            <span class="text-xs font-semibold text-brand-textDark truncate">Ayam Keluar</span>
+            <div class="my-2">
+                <p class="card-fit-value text-brand-textDark font-bold" title="Rp {{ number_format($posSummary['used_cost'], 0, ',', '.') }}">Rp {{ number_format($posSummary['used_cost'], 0, ',', '.') }}</p>
+                <p class="text-xs font-medium text-brand-textGray mt-0.5 truncate" title="{{ number_format($posSummary['used_weight_kg'], 1, ',', '.') }} kg">
+                    {{ number_format($posSummary['used_weight_kg'], 1, ',', '.') }} kg
+                </p>
+            </div>
+        </div>
+
+        <!-- Card 4: Penjualan Kasir POS -->
+        <div class="panel p-5 min-w-0 overflow-hidden flex flex-col justify-between">
+            <span class="text-xs font-semibold text-brand-textDark truncate">Penjualan Kasir (POS)</span>
+            <div class="my-2">
+                <p class="card-fit-value text-brand-textDark font-bold" title="Rp {{ number_format($posSummary['total_revenue'], 0, ',', '.') }}">Rp {{ number_format($posSummary['total_revenue'], 0, ',', '.') }}</p>
+                <p class="text-xs font-medium text-brand-textGray mt-0.5 truncate" title="{{ number_format($posSummary['sold_weight_kg'], 1, ',', '.') }} kg">
+                    {{ number_format($posSummary['sold_weight_kg'], 1, ',', '.') }} kg ({{ $posSummary['sales_count'] }} transaksi)
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <!-- 2 Highlight Cards: Susut Bobot & Keuntungan -->
+    <div class="mb-6 grid gap-4 lg:grid-cols-2">
+        <!-- Highlight 1: Penyusutan Bobot -->
+        <section class="panel p-5 border-l-4 border-l-amber-500 min-w-0 overflow-hidden">
+            <div class="flex items-center justify-between gap-2">
+                <h2 class="text-sm font-bold text-brand-textDark truncate">Penyusutan Bobot</h2>
+                <span class="rounded-lg bg-amber-100 px-2.5 py-0.5 text-xs font-bold text-amber-800 shrink-0">
+                    Susut {{ $posSummary['shrinkage_pct'] }}%
+                </span>
+            </div>
+            <div class="my-3 flex items-baseline gap-2 min-w-0">
+                <span class="card-fit-value-lg font-bold text-amber-700" title="-{{ number_format($posSummary['shrinkage_kg'], 1, ',', '.') }} kg">-{{ number_format($posSummary['shrinkage_kg'], 1, ',', '.') }} kg</span>
+            </div>
+            <div class="rounded-lg bg-[#f8fafc] p-3 text-xs space-y-1.5 border border-[#e2e8f0]">
+                <div class="flex justify-between">
+                    <span class="text-brand-textGray">Ayam kotor keluar:</span>
+                    <span class="font-medium text-brand-textDark">{{ number_format($posSummary['used_weight_kg'], 1, ',', '.') }} kg</span>
+                </div>
+                <div class="flex justify-between">
+                    <span class="text-brand-textGray">Daging terjual kasir:</span>
+                    <span class="font-medium text-brand-textDark">{{ number_format($posSummary['sold_weight_kg'], 1, ',', '.') }} kg</span>
                 </div>
             </div>
+        </section>
 
-            <div class="overflow-x-auto">
-                <table class="data-table">
-                    <thead>
-                        <tr>
-                            <th>Nama potongan produk</th>
-                            <th>Satuan</th>
-                            <th class="text-right">Hasil timbangan</th>
-                            <th class="text-right">Alokasi HPP per satuan</th>
-                            <th class="text-right">Total nilai modal</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @foreach($batch->outputs as $out)
-                            <tr>
-                                <td class="font-semibold text-brand-textDark">{{ $out->product->name }}</td>
-                                <td><span class="rounded bg-[#f0f4f8] px-2 py-0.5 text-xs">{{ $out->product->unit }}</span></td>
-                                <td class="text-right font-semibold text-brand-primary">{{ number_format($out->output_qty, 2, ',', '.') }} {{ $out->product->unit }}</td>
-                                <td class="text-right text-brand-textGray">Rp {{ number_format($out->allocated_cost_per_unit, 0, ',', '.') }}</td>
-                                <td class="text-right font-medium">Rp {{ number_format($out->output_qty * $out->allocated_cost_per_unit, 0, ',', '.') }}</td>
-                            </tr>
-                        @endforeach
-                    </tbody>
-                    <tfoot>
-                        <tr class="bg-[#f0f4f8] font-bold border-t border-[#dfe3e7]">
-                            <td colspan="2">TOTAL HASIL BERSIH</td>
-                            <td class="text-right text-brand-primary">{{ number_format($batch->total_output_weight_kg, 2, ',', '.') }} kg</td>
-                            <td class="text-right">Rp {{ number_format($batch->cost_per_kg, 0, ',', '.') }} / kg</td>
-                            <td class="text-right">Rp {{ number_format($batch->total_cost, 0, ',', '.') }}</td>
-                        </tr>
-                    </tfoot>
-                </table>
+        <!-- Highlight 2: Keuntungan Hari Ini -->
+        <section class="panel p-5 border-l-4 {{ $posSummary['profit'] >= 0 ? 'border-l-emerald-500' : 'border-l-red-500' }} min-w-0 overflow-hidden">
+            <div class="flex items-center justify-between gap-2">
+                <h2 class="text-sm font-bold text-brand-textDark truncate">Keuntungan Hari Ini</h2>
+                <span class="rounded-lg {{ $posSummary['profit'] >= 0 ? 'bg-emerald-100 text-emerald-800' : 'bg-red-100 text-red-800' }} px-2.5 py-0.5 text-xs font-bold shrink-0">
+                    Margin {{ $posSummary['profit_margin'] }}%
+                </span>
+            </div>
+            <div class="my-3 flex items-baseline gap-2 min-w-0">
+                <span class="card-fit-value-lg font-bold {{ $posSummary['profit'] >= 0 ? 'text-emerald-700' : 'text-red-700' }}" title="Rp {{ number_format($posSummary['profit'], 0, ',', '.') }}">
+                    Rp {{ number_format($posSummary['profit'], 0, ',', '.') }}
+                </span>
+            </div>
+            <div class="rounded-lg bg-[#f8fafc] p-3 text-xs space-y-1.5 border border-[#e2e8f0]">
+                <div class="flex justify-between">
+                    <span class="text-brand-textGray">Omzet penjualan kasir:</span>
+                    <span class="font-medium text-brand-textDark">Rp {{ number_format($posSummary['total_revenue'], 0, ',', '.') }}</span>
+                </div>
+                <div class="flex justify-between">
+                    <span class="text-brand-textGray">Modal kotor ayam keluar:</span>
+                    <span class="font-medium text-brand-textDark">-Rp {{ number_format($posSummary['used_cost'], 0, ',', '.') }}</span>
+                </div>
             </div>
         </section>
-    @endif
+    </div>
+
+    <!-- Section Form Update Sisa Ayam Malam Hari (Simpel, Bersih, Tanpa Tabel Ribet) -->
+    <section class="panel p-6 bg-[#fbfcfe] border border-blue-200 max-w-xl">
+        <h2 class="text-sm font-bold text-brand-primary">Update Sisa Ayam Malam Hari</h2>
+        <form wire:submit="updateRemaining" class="mt-4 space-y-4">
+            <label class="field">
+                Sisa ayam (kg) *
+                <div class="flex items-center gap-2">
+                    <input wire:model="remaining_weight_kg" type="number" step="0.1" min="0" class="input font-bold text-base text-brand-primary" placeholder="0.0" required>
+                    <span class="text-sm font-semibold text-brand-textGray">kg</span>
+                </div>
+            </label>
+
+            <button type="submit" class="btn btn-primary" wire:loading.attr="disabled">
+                <x-icon name="check"/>Simpan Sisa Malam
+            </button>
+        </form>
+    </section>
 </div>

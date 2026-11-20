@@ -17,15 +17,26 @@ class ProductionService
         $dateStr = now()->format('Ymd');
         $countToday = ProductionBatch::whereDate('created_at', now()->toDateString())->count() + 1;
 
-        return 'BATCH-' . $dateStr . '-' . str_pad((string) $countToday, 3, '0', STR_PAD_LEFT);
+        return 'BATCH-'.$dateStr.'-'.str_pad((string) $countToday, 3, '0', STR_PAD_LEFT);
     }
 
     public function createBatch(array $data): ProductionBatch
     {
-        if (($data['live_weight_kg'] ?? 0) <= 0) {
+        $liveWeight = (float) ($data['live_weight_kg'] ?? 0);
+        if ($liveWeight <= 0) {
             throw new InvalidArgumentException('Berat ayam hidup harus lebih besar dari 0 kg.');
         }
 
+        $buyPrice = (float) ($data['buy_price_per_kg'] ?? 0);
+        $rawCost = (float) ($data['raw_material_cost'] ?? 0);
+
+        if ($buyPrice > 0 && $rawCost <= 0) {
+            $rawCost = round($liveWeight * $buyPrice, 2);
+        } elseif ($rawCost > 0 && $buyPrice <= 0) {
+            $buyPrice = round($rawCost / $liveWeight, 2);
+        }
+
+        $remainingWeight = (float) ($data['remaining_weight_kg'] ?? 0);
         $batchNumber = $data['batch_number'] ?? $this->generateBatchNumber();
         $date = $data['production_date'] ?? now()->toDateString();
 
@@ -33,11 +44,25 @@ class ProductionService
             'batch_number' => $batchNumber,
             'production_date' => $date,
             'status' => 'active',
-            'live_weight_kg' => $data['live_weight_kg'],
+            'live_weight_kg' => $liveWeight,
+            'buy_price_per_kg' => $buyPrice,
+            'remaining_weight_kg' => $remainingWeight,
             'live_bird_count' => $data['live_bird_count'] ?? null,
-            'raw_material_cost' => $data['raw_material_cost'] ?? 0,
+            'raw_material_cost' => $rawCost,
             'additional_cost' => $data['additional_cost'] ?? 0,
             'notes' => $data['notes'] ?? null,
+        ]);
+
+        $this->invalidateCache();
+
+        return $batch;
+    }
+
+    public function updateRemaining(ProductionBatch $batch, float $remainingWeight): ProductionBatch
+    {
+        $remainingWeight = max(0.0, round($remainingWeight, 2));
+        $batch->update([
+            'remaining_weight_kg' => $remainingWeight,
         ]);
 
         $this->invalidateCache();
@@ -107,7 +132,7 @@ class ProductionService
                 $incomingTotalCost = $outputQty * $batchHppPerKg;
 
                 // Moving Weighted Average Cost
-                if ($newStock > 0) {
+                if ($newStock > 0 && $currentStock > 0) {
                     $newHpp = round((($currentStock * $currentHpp) + $incomingTotalCost) / $newStock, 2);
                 } else {
                     $newHpp = $batchHppPerKg;
@@ -167,6 +192,6 @@ class ProductionService
     public function invalidateCache(): void
     {
         Cache::forget('products_catalog_active');
-        Cache::forget('dashboard_metrics_' . now()->toDateString());
+        Cache::forget('dashboard_metrics_'.now()->toDateString());
     }
 }

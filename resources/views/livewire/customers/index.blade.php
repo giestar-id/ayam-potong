@@ -3,7 +3,6 @@
         <div>
             <p class="eyebrow">Mitra & pembeli</p>
             <h1 class="page-title">Pelanggan</h1>
-            <p class="page-description">Kelola pelanggan tetap, tingkat diskon otomatis kasir, dan pantau saldo piutang aktif.</p>
         </div>
         <button type="button" wire:click="openCreate" class="btn btn-primary">
             <x-icon name="plus"/> Tambah pelanggan baru

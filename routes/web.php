@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\SaleReceiptController;
+use App\Http\Middleware\EnsureActiveUser;
 use App\Http\Middleware\EnsureOwner;
 use App\Livewire\Auth\Login;
 use App\Livewire\Cash\Index as CashIndex;
@@ -24,9 +25,9 @@ Route::middleware('guest')->group(function () {
     Route::get('/login', Login::class)->name('login');
 });
 
-// Authenticated Routes
-Route::middleware(['auth', 'auth.session', EnsureOwner::class])->group(function () {
-    // Dashboard
+// Authenticated Routes (Owner & Pegawai)
+Route::middleware(['auth', 'auth.session', EnsureActiveUser::class])->group(function () {
+    // Beranda / Dashboard
     Route::get('/', Dashboard::class)->name('dashboard');
 
     // Logout
@@ -38,30 +39,35 @@ Route::middleware(['auth', 'auth.session', EnsureOwner::class])->group(function 
         return redirect('/login');
     })->name('logout');
 
-    // Produk & Stok
-    Route::get('/products', ProductIndex::class)->name('products.index');
-    Route::get('/products/form/{id?}', ProductForm::class)->name('products.form');
-
     // Produksi Ayam Hidup -> Potongan
     Route::get('/productions', ProductionIndex::class)->name('productions.index');
     Route::get('/productions/form', ProductionForm::class)->name('productions.form');
     Route::get('/productions/{id}', ProductionShow::class)->name('productions.show');
 
-    // Penjualan Kasir POS & Piutang
+    // Kasir / POS & Nota
     Route::get('/sales/pos', Pos::class)->name('sales.pos');
-    Route::get('/sales', SaleIndex::class)->name('sales.index');
     Route::get('/sales/{sale}/receipt', SaleReceiptController::class)->name('sales.receipt');
 
-    // Pelanggan
-    Route::get('/customers', CustomerIndex::class)->name('customers.index');
+    // Penjualan
+    Route::get('/sales', SaleIndex::class)->name('sales.index');
 
-    // Tim & Penggajian
-    Route::get('/employees', EmployeeIndex::class)->name('employees.index');
-    Route::get('/payrolls', PayrollIndex::class)->name('payrolls.index');
+    // Produk & Stok
+    Route::get('/products', ProductIndex::class)->name('products.index');
+    Route::get('/products/form/{id?}', ProductForm::class)->name('products.form');
 
-    // Buku Kas (Pemasukan & Pengeluaran)
-    Route::get('/cash', CashIndex::class)->name('cash.index');
+    // Khusus Owner (Diproteksi EnsureOwner)
+    Route::middleware(EnsureOwner::class)->group(function () {
+        // Pelanggan
+        Route::get('/customers', CustomerIndex::class)->name('customers.index');
 
-    // Pengaturan
-    Route::get('/settings', Settings::class)->name('settings');
+        // Tim Pegawai & Penggajian
+        Route::get('/employees', EmployeeIndex::class)->name('employees.index');
+        Route::get('/payrolls', PayrollIndex::class)->name('payrolls.index');
+
+        // Buku Kas (Pemasukan & Pengeluaran)
+        Route::get('/cash', CashIndex::class)->name('cash.index');
+
+        // Pengaturan
+        Route::get('/settings', Settings::class)->name('settings');
+    });
 });

@@ -64,12 +64,14 @@
     .badge-warning { @apply bg-[#fff2dd] text-[#99560e]; }
     .badge-danger { @apply bg-[#ffdad6] text-[#93000a]; }
     .empty-state { @apply px-6 py-12 text-center text-sm leading-6 text-brand-textGray; }
-    .stat-card { @apply relative min-w-0 overflow-hidden p-6; transition: transform 200ms ease, box-shadow 200ms ease; }
+    .stat-card { @apply relative min-w-0 overflow-hidden p-5 sm:p-6 flex flex-col justify-between; transition: transform 200ms ease, box-shadow 200ms ease; }
     .stat-card:hover { transform: translateY(-2px); }
-    .stat-label { @apply font-sans text-[13px] font-medium text-brand-textGray; }
+    .stat-label { @apply font-sans text-[13px] font-medium text-brand-textGray truncate; }
     .stat-icon { @apply flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-[#f0f4f8] text-brand-primary; }
-    .stat-value { @apply mt-2 font-heading text-[26px] leading-9 font-bold tracking-[-.03em] break-words sm:text-[28px]; }
-    .metric-note { @apply mt-2 text-[11px] leading-5 text-brand-textGray; }
+    .stat-value { @apply mt-2 font-heading font-bold tracking-[-.03em] whitespace-nowrap overflow-hidden text-ellipsis tabular-nums block; font-size: clamp(1.125rem, 1.8vw, 1.625rem); line-height: 1.25; }
+    .metric-note { @apply mt-2 text-[11px] leading-5 text-brand-textGray truncate; }
+    .card-fit-value { @apply whitespace-nowrap overflow-hidden text-ellipsis tabular-nums font-bold tracking-tight block; font-size: clamp(1rem, 1.6vw, 1.375rem); line-height: 1.25; }
+    .card-fit-value-lg { @apply whitespace-nowrap overflow-hidden text-ellipsis tabular-nums font-extrabold tracking-tight block; font-size: clamp(1.25rem, 2.2vw, 1.875rem); line-height: 1.2; }
     .nav-link { @apply flex min-h-10 items-center gap-3 rounded-lg px-4 py-2.5 text-[13px] font-medium text-[#d8e2ff] hover:bg-brand-secondary hover:text-white; }
     .nav-link.is-active { @apply bg-brand-secondary text-white; }
     .nav-link.is-active::after { content: ''; @apply ml-auto h-1.5 w-1.5 rounded-full bg-white; }

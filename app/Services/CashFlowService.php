@@ -6,8 +6,8 @@ use App\Models\CashFlow;
 use App\Models\Product;
 use App\Models\ProductionBatch;
 use App\Models\Sale;
+use App\Models\SaleItem;
 use Illuminate\Support\Facades\Cache;
-use Illuminate\Support\Facades\DB;
 use InvalidArgumentException;
 
 class CashFlowService
@@ -72,23 +72,23 @@ class CashFlowService
      */
     public function getDashboardSummary(?string $startDate = null, ?string $endDate = null): array
     {
-        $cacheKey = 'dashboard_metrics_' . ($startDate ?? 'default') . '_' . ($endDate ?? 'default');
+        $cacheKey = 'dashboard_metrics_'.($startDate ?? 'default').'_'.($endDate ?? 'default');
 
         $metrics = Cache::remember($cacheKey, 15, function () use ($startDate, $endDate) {
             $cashQuery = CashFlow::query();
             $salesQuery = Sale::query();
 
             if ($startDate && $endDate) {
-                $start = substr($startDate, 0, 10) . ' 00:00:00';
-                $end = substr($endDate, 0, 10) . ' 23:59:59';
+                $start = substr($startDate, 0, 10).' 00:00:00';
+                $end = substr($endDate, 0, 10).' 23:59:59';
                 $cashQuery->whereBetween('transaction_date', [$start, $end]);
                 $salesQuery->whereBetween('transaction_date', [$start, $end]);
             } elseif ($startDate) {
-                $start = substr($startDate, 0, 10) . ' 00:00:00';
+                $start = substr($startDate, 0, 10).' 00:00:00';
                 $cashQuery->where('transaction_date', '>=', $start);
                 $salesQuery->where('transaction_date', '>=', $start);
             } elseif ($endDate) {
-                $end = substr($endDate, 0, 10) . ' 23:59:59';
+                $end = substr($endDate, 0, 10).' 23:59:59';
                 $cashQuery->where('transaction_date', '<=', $end);
                 $salesQuery->where('transaction_date', '<=', $end);
             }
@@ -112,11 +112,11 @@ class CashFlowService
                 $chartDates[] = $lbl;
 
                 $income = (float) CashFlow::where('type', 'income')
-                    ->whereBetween('transaction_date', [$d . ' 00:00:00', $d . ' 23:59:59'])
+                    ->whereBetween('transaction_date', [$d.' 00:00:00', $d.' 23:59:59'])
                     ->sum('amount');
 
                 $expense = (float) CashFlow::where('type', 'expense')
-                    ->whereBetween('transaction_date', [$d . ' 00:00:00', $d . ' 23:59:59'])
+                    ->whereBetween('transaction_date', [$d.' 00:00:00', $d.' 23:59:59'])
                     ->sum('amount');
 
                 $incomeSeries[] = $income;
@@ -148,7 +148,7 @@ class CashFlowService
         });
 
         // Produk terlaris (Top Selling Products)
-        $salesItemSums = \App\Models\SaleItem::query()
+        $salesItemSums = SaleItem::query()
             ->selectRaw('product_id, SUM(quantity) as total_qty, SUM(subtotal) as total_sales')
             ->groupBy('product_id')
             ->get()
@@ -158,6 +158,7 @@ class CashFlowService
             ->get()
             ->map(function ($product) use ($salesItemSums) {
                 $sold = $salesItemSums->get($product->id);
+
                 return [
                     'id' => $product->id,
                     'name' => $product->name,
@@ -172,11 +173,11 @@ class CashFlowService
             ->values()
             ->toArray();
 
-        // 5-10 Transaksi terbaru (live query to avoid serialization issues)
+        // 10 Transaksi terbaru di dashboard
         $recentSales = Sale::with('customer')
             ->latest('transaction_date')
             ->latest('id')
-            ->take(8)
+            ->take(10)
             ->get();
 
         // Peringatan stok menipis (Stok <= Min Stok)

@@ -16,6 +16,13 @@ class CashFlowController extends Controller
 
     public function index(Request $request): JsonResponse
     {
+        if (! $request->user()?->isOwner()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Hanya pemilik (owner) yang memiliki akses ke catatan arus kas.',
+            ], 403);
+        }
+
         $query = CashFlow::query();
 
         if ($request->filled('type')) {
@@ -40,6 +47,13 @@ class CashFlowController extends Controller
 
     public function store(Request $request): JsonResponse
     {
+        if (! $request->user()?->isOwner()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Hanya pemilik (owner) yang memiliki akses untuk mencatat arus kas manual.',
+            ], 403);
+        }
+
         $validated = $request->validate([
             'type' => 'required|in:income,expense',
             'category' => 'required|in:sales,debt_payment,stock_purchase,production_cost,payroll,operational_utility,other',

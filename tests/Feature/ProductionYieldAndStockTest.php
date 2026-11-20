@@ -2,11 +2,13 @@
 
 namespace Tests\Feature;
 
-use App\Models\CashFlow;
+use App\Livewire\Productions\Form as ProductionForm;
+use App\Livewire\Productions\Index;
 use App\Models\Product;
-use App\Models\ProductionBatch;
+use App\Models\User;
 use App\Services\ProductionService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Livewire\Livewire;
 use Tests\TestCase;
 
 class ProductionYieldAndStockTest extends TestCase
@@ -71,6 +73,57 @@ class ProductionYieldAndStockTest extends TestCase
             'type' => 'expense',
             'category' => 'production_cost',
             'amount' => 400000.0,
+        ]);
+    }
+
+    public function test_production_index_update_remaining_modal(): void
+    {
+        $user = User::factory()->create(['role' => 'owner']);
+        $service = app(ProductionService::class);
+
+        $batch = $service->createBatch([
+            'live_weight_kg' => 300.0,
+            'buy_price_per_kg' => 24000.0,
+            'raw_material_cost' => 7200000.0,
+            'production_date' => now()->toDateString(),
+        ]);
+
+        Livewire::actingAs($user)
+            ->test(Index::class)
+            ->assertSee($batch->batch_number)
+            ->call('openUpdateRemaining', $batch->id)
+            ->assertSet('selectedBatchId', $batch->id)
+            ->assertSet('selectedBatchNumber', $batch->batch_number)
+            ->set('selectedBatchRemaining', '45.5')
+            ->call('saveRemaining')
+            ->assertSet('selectedBatchId', null)
+            ->assertHasNoErrors();
+
+        $batch->refresh();
+        $this->assertEquals(45.5, (float) $batch->remaining_weight_kg);
+        $this->assertEquals(254.5, (float) $batch->used_weight_kg);
+    }
+
+    public function test_production_form_creates_batch_with_total_cost_and_auto_calculates_price_per_kg(): void
+    {
+        $user = User::factory()->create(['role' => 'owner']);
+
+        Livewire::actingAs($user)
+            ->test(ProductionForm::class)
+            ->set('batch_number', 'BATCH-TEST-TOTAL-COST-01')
+            ->set('production_date', now()->toDateString())
+            ->set('live_weight_kg', '200')
+            ->set('total_cost', '4800000')
+            ->assertSet('calculatedBuyPricePerKg', 24000.0)
+            ->call('save')
+            ->assertHasNoErrors()
+            ->assertSessionHas('success');
+
+        $this->assertDatabaseHas('production_batches', [
+            'batch_number' => 'BATCH-TEST-TOTAL-COST-01',
+            'live_weight_kg' => 200.0,
+            'raw_material_cost' => 4800000.0,
+            'buy_price_per_kg' => 24000.0,
         ]);
     }
 }

@@ -31,14 +31,20 @@ class Index extends Component
 
     // Modal Input Manual
     public bool $showManualModal = false;
+
     public string $manualType = 'expense'; // 'expense' or 'income'
+
     public string $manualCategory = 'operational_utility';
+
     public string $manualAmount = '';
+
     public string $manualDescription = '';
+
     public string $manualDate = '';
 
     public function mount(): void
     {
+        $this->authorize('owner');
         $this->manualDate = now()->toDateString();
     }
 

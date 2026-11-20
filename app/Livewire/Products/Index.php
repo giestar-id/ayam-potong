@@ -28,12 +28,19 @@ class Index extends Component
 
     // Modal Restock
     public ?int $restockProductId = null;
+
     public string $restockProductName = '';
+
     public string $restockUnit = 'kg';
+
     public float $currentStock = 0;
+
     public float $currentHpp = 0;
+
     public string $incomingQty = '';
+
     public string $incomingCostTotal = '';
+
     public string $restockNotes = '';
 
     public function updatingSearch(): void
@@ -64,26 +71,25 @@ class Index extends Component
     {
         $this->validate([
             'incomingQty' => 'required|numeric|gt:0',
-            'incomingCostTotal' => 'required|numeric|gt:0',
             'restockNotes' => 'nullable|string',
         ], [
             'incomingQty.required' => 'Jumlah kuantitas masuk wajib diisi.',
             'incomingQty.gt' => 'Jumlah kuantitas harus lebih besar dari 0.',
-            'incomingCostTotal.required' => 'Total biaya pembelian stok wajib diisi.',
-            'incomingCostTotal.gt' => 'Total biaya harus lebih besar dari 0.',
         ]);
 
         $product = Product::findOrFail($this->restockProductId);
+        $unitCost = $product->average_cost > 0 ? (float) $product->average_cost : 25000;
+        $totalCost = (float) $this->incomingCostTotal > 0 ? (float) $this->incomingCostTotal : round((float) $this->incomingQty * $unitCost);
 
         try {
             $productService->restock(
                 $product,
                 (float) $this->incomingQty,
-                (float) $this->incomingCostTotal,
+                $totalCost,
                 $this->restockNotes ?: null
             );
 
-            session()->flash('success', "Stok {$product->name} berhasil ditambahkan dan pengeluaran otomatis dicatat.");
+            session()->flash('success', "Stok {$product->name} berhasil ditambahkan!");
             $this->closeRestock();
         } catch (\Exception $e) {
             $this->addError('incomingQty', $e->getMessage());
@@ -95,11 +101,12 @@ class Index extends Component
         $product = Product::findOrFail($productId);
         $product->is_active = ! $product->is_active;
         $product->save();
-        session()->flash('success', "Status produk {$product->name} diubah menjadi " . ($product->is_active ? 'Aktif' : 'Nonaktif'));
+        session()->flash('success', "Status produk {$product->name} diubah menjadi ".($product->is_active ? 'Aktif' : 'Nonaktif'));
     }
 
     public function delete(int $productId, ProductService $productService): void
     {
+        $this->authorize('owner');
         $product = Product::findOrFail($productId);
         try {
             $productService->deleteProduct($product);
@@ -109,6 +116,11 @@ class Index extends Component
         }
     }
 
+    public function deleteProduct(int $productId, ProductService $productService): void
+    {
+        $this->delete($productId, $productService);
+    }
+
     public function render(): View
     {
         $query = Product::query();
@@ -116,7 +128,7 @@ class Index extends Component
         if ($this->search !== '') {
             $query->where(function ($q) {
                 $q->where('name', 'like', "%{$this->search}%")
-                  ->orWhere('sku', 'like', "%{$this->search}%");
+                    ->orWhere('sku', 'like', "%{$this->search}%");
             });
         }
 

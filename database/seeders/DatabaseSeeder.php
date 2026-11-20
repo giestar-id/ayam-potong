@@ -10,7 +10,6 @@ use App\Models\Product;
 use App\Models\User;
 use App\Services\PayrollService;
 use App\Services\ProductionService;
-use App\Services\ProductService;
 use App\Services\TransactionService;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;

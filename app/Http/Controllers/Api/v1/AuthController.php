@@ -14,15 +14,24 @@ class AuthController extends Controller
     public function login(Request $request): JsonResponse
     {
         $request->validate([
-            'email' => 'required|email',
+            'email' => 'required|string',
             'password' => 'required|string',
         ]);
 
-        $user = User::where('email', $request->email)->first();
+        $identifier = trim($request->email);
+        $user = User::where('email', $identifier)
+            ->orWhere('phone', $identifier)
+            ->first();
 
         if (! $user || ! Hash::check($request->password, $user->password)) {
             throw ValidationException::withMessages([
-                'email' => ['Email atau kata sandi yang Anda masukkan salah.'],
+                'email' => ['Nomor HP / Email atau kata sandi yang Anda masukkan salah.'],
+            ]);
+        }
+
+        if ($user->employee && ! $user->employee->is_active) {
+            throw ValidationException::withMessages([
+                'email' => ['Akun pegawai Anda sedang dinonaktifkan. Silakan hubungi pemilik gerai.'],
             ]);
         }
 
@@ -36,6 +45,7 @@ class AuthController extends Controller
                     'id' => $user->id,
                     'name' => $user->name,
                     'email' => $user->email,
+                    'phone' => $user->phone,
                     'role' => $user->role,
                 ],
                 'token' => $token,
@@ -63,6 +73,7 @@ class AuthController extends Controller
                 'id' => $user->id,
                 'name' => $user->name,
                 'email' => $user->email,
+                'phone' => $user->phone,
                 'role' => $user->role,
             ],
         ]);

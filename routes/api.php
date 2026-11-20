@@ -11,6 +11,7 @@ use App\Http\Controllers\Api\v1\ProductController;
 use App\Http\Controllers\Api\v1\ProductionController;
 use App\Http\Controllers\Api\v1\SaleController;
 use App\Http\Controllers\Api\v1\SettingController;
+use App\Http\Middleware\EnsureActiveUser;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -19,13 +20,13 @@ use Illuminate\Support\Facades\Route;
 |--------------------------------------------------------------------------
 */
 
-Route::prefix('v1')->group(function () {
+Route::prefix('v1')->as('api.')->group(function () {
     // Public Auth Endpoints
     Route::post('/auth/login', [AuthController::class, 'login']);
     Route::get('/settings/public', [SettingController::class, 'show']);
 
     // Protected Routes (Laravel Sanctum Token)
-    Route::middleware('auth:sanctum')->group(function () {
+    Route::middleware(['auth:sanctum', EnsureActiveUser::class])->group(function () {
         // Auth Session Management
         Route::post('/auth/logout', [AuthController::class, 'logout']);
         Route::get('/auth/me', [AuthController::class, 'me']);
@@ -60,6 +61,8 @@ Route::prefix('v1')->group(function () {
         // Productions
         Route::get('/productions', [ProductionController::class, 'index']);
         Route::post('/productions', [ProductionController::class, 'store']);
+        Route::put('/productions/{id}/remaining', [ProductionController::class, 'updateRemaining']);
+        Route::patch('/productions/{id}/remaining', [ProductionController::class, 'updateRemaining']);
         Route::post('/productions/{id}/complete', [ProductionController::class, 'complete']);
         Route::put('/productions/{id}/stage', [ProductionController::class, 'updateStage']);
         Route::apiResource('productions', ProductionController::class)->except(['index', 'store']);

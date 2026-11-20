@@ -3,7 +3,6 @@
         <div>
             <p class="eyebrow">Persediaan</p>
             <h1 class="page-title">{{ $productId ? 'Detail & edit produk' : 'Tambah produk baru' }}</h1>
-            <p class="page-description">Kelola identitas potongan ayam, harga jual, modal HPP, dan batas minimum stok.</p>
         </div>
         <a href="{{ route('products.index') }}" class="btn">Kembali ke produk</a>
     </div>
@@ -14,33 +13,22 @@
         <section class="panel space-y-6 p-6">
             <h2 class="text-sm font-semibold">Informasi produk</h2>
 
-            <div class="grid gap-5 sm:grid-cols-[1fr_220px]">
-                <label class="field">
-                    Nama produk ayam *
-                    <input class="input" wire:model="name" maxlength="150" required placeholder="Contoh: Dada Fillet Segar, Paha Utuh, Sayap, dll.">
-                    @error('name') <span class="text-xs text-red-600">{{ $message }}</span> @enderror
-                </label>
-
-                <label class="field">
-                    Satuan penjualan *
-                    <select class="input" wire:model.live="unit">
-                        <option value="kg">Kilogram (kg) - Desimal</option>
-                        <option value="ekor">Ekor (ekor) - Satuan utuh</option>
-                    </select>
-                    @error('unit') <span class="text-xs text-red-600">{{ $message }}</span> @enderror
-                </label>
-            </div>
+            <label class="field">
+                Nama produk ayam *
+                <input class="input" wire:model="name" maxlength="150" required placeholder="Contoh: Dada Fillet Segar, Paha Utuh, Sayap, dll.">
+                @error('name') <span class="text-xs text-red-600">{{ $message }}</span> @enderror
+            </label>
 
             <div class="grid gap-5 sm:grid-cols-2">
                 <label class="field">
-                    Harga jual standar per {{ $unit }} (Rp) *
+                    Harga jual standar (Rp / kg) *
                     <input class="input font-semibold" wire:model="selling_price" inputmode="decimal" required placeholder="Contoh: 38000">
                     @error('selling_price') <span class="text-xs text-red-600">{{ $message }}</span> @enderror
                 </label>
 
                 <label class="field">
-                    Batas stok minimum ({{ $unit }}) *
-                    <input class="input" wire:model="min_stock" inputmode="decimal" placeholder="Contoh: 5" required>
+                    Batas stok minimum *
+                    <input class="input" wire:model="min_stock" inputmode="decimal" placeholder="Contoh: 5 kg" required>
                     <span class="text-xs font-normal text-brand-textGray">Peringatan stok menipis muncul jika stok di bawah angka ini.</span>
                     @error('min_stock') <span class="text-xs text-red-600">{{ $message }}</span> @enderror
                 </label>
@@ -48,22 +36,21 @@
 
             <div class="grid gap-5 sm:grid-cols-2">
                 <label class="field">
-                    {{ $productId ? 'Stok saat ini (' . $unit . ')' : 'Stok awal (' . $unit . ')' }} *
-                    <input class="input" wire:model="stock" inputmode="decimal" {{ $productId ? 'readonly' : '' }}>
+                    {{ $productId ? 'Stok saat ini' : 'Stok awal' }} *
+                    <input class="input" wire:model="stock" inputmode="decimal" placeholder="Contoh: 10 kg" {{ $productId ? 'readonly' : '' }}>
                     @if($productId)
                         <span class="text-xs font-normal text-brand-textGray">Penambahan stok dilakukan lewat menu Stok atau Produksi.</span>
                     @endif
                     @error('stock') <span class="text-xs text-red-600">{{ $message }}</span> @enderror
                 </label>
 
-                <label class="field">
-                    Modal rata-rata / HPP per {{ $unit }} (Rp) *
-                    <input class="input" wire:model="average_cost" inputmode="decimal" {{ $productId ? 'readonly' : '' }} placeholder="0">
-                    @if($productId)
+                @if($productId)
+                    <label class="field">
+                        Modal rata-rata / HPP (Rp / kg)
+                        <input class="input bg-brand-bgMain font-medium" wire:model="average_cost" inputmode="decimal" readonly placeholder="0">
                         <span class="text-xs font-normal text-brand-textGray">Dihitung otomatis dengan metode Moving Weighted Average.</span>
-                    @endif
-                    @error('average_cost') <span class="text-xs text-red-600">{{ $message }}</span> @enderror
-                </label>
+                    </label>
+                @endif
             </div>
         </section>
 

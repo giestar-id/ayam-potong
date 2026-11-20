@@ -3,7 +3,6 @@
         <div>
             <p class="eyebrow">Workspace</p>
             <h1 class="page-title">Pengaturan</h1>
-            <p class="page-description">Identitas usaha ayam potong, rincian struk, dan keamanan akses pemilik.</p>
         </div>
     </div>
     <x-feedback/>

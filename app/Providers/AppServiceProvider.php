@@ -2,7 +2,6 @@
 
 namespace App\Providers;
 
-use App\Http\Middleware\EnsureOwner;
 use App\Models\BusinessSetting;
 use App\Models\CashFlow;
 use App\Models\Customer;
@@ -20,7 +19,6 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\ServiceProvider;
-use Livewire\Livewire;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -33,9 +31,7 @@ class AppServiceProvider extends ServiceProvider
     {
         Model::unguard();
 
-        Gate::define('owner', fn (User $user): bool => $user->role === 'owner' || $user->id === (int) User::min('id'));
-
-        Livewire::addPersistentMiddleware([EnsureOwner::class]);
+        Gate::define('owner', fn (User $user): bool => $user->isOwner());
 
         // Model Observers for automatic cache invalidation (PRD 1.2 D & 5.2)
         $modelsToInvalidate = [
@@ -57,14 +53,14 @@ class AppServiceProvider extends ServiceProvider
             $model::saved(function () {
                 Cache::forget('products_catalog_active');
                 Cache::forget('business_settings_cache');
-                Cache::forget('dashboard_metrics_' . now()->toDateString());
+                Cache::forget('dashboard_metrics_'.now()->toDateString());
                 Cache::forget('dashboard_metrics_default_default');
             });
 
             $model::deleted(function () {
                 Cache::forget('products_catalog_active');
                 Cache::forget('business_settings_cache');
-                Cache::forget('dashboard_metrics_' . now()->toDateString());
+                Cache::forget('dashboard_metrics_'.now()->toDateString());
                 Cache::forget('dashboard_metrics_default_default');
             });
         }

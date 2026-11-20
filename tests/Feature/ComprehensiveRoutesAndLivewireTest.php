@@ -4,7 +4,6 @@ namespace Tests\Feature;
 
 use App\Models\BusinessSetting;
 use App\Models\Customer;
-use App\Models\Employee;
 use App\Models\Product;
 use App\Models\ProductionBatch;
 use App\Models\Sale;
@@ -18,9 +17,13 @@ class ComprehensiveRoutesAndLivewireTest extends TestCase
     use RefreshDatabase;
 
     protected User $owner;
+
     protected Product $sampleProduct;
+
     protected Customer $sampleCustomer;
+
     protected Sale $sampleSale;
+
     protected ProductionBatch $sampleBatch;
 
     protected function setUp(): void
@@ -96,13 +99,13 @@ class ComprehensiveRoutesAndLivewireTest extends TestCase
             '/',
             '/products',
             '/products/form',
-            '/products/form/' . $this->sampleProduct->id,
+            '/products/form/'.$this->sampleProduct->id,
             '/productions',
             '/productions/form',
-            '/productions/' . $this->sampleBatch->id,
+            '/productions/'.$this->sampleBatch->id,
             '/sales',
             '/sales/pos',
-            '/sales/' . $this->sampleSale->id . '/receipt',
+            '/sales/'.$this->sampleSale->id.'/receipt',
             '/customers',
             '/employees',
             '/payrolls',
@@ -113,6 +116,43 @@ class ComprehensiveRoutesAndLivewireTest extends TestCase
         foreach ($routes as $route) {
             $response = $this->actingAs($this->owner)->get($route);
             $response->assertStatus(200);
+        }
+    }
+
+    public function test_pegawai_can_access_allowed_routes_but_blocked_from_owner_routes(): void
+    {
+        $pegawaiUser = User::factory()->create([
+            'name' => 'Pegawai Test',
+            'email' => 'pegawai@ayampotong.com',
+            'role' => 'pegawai',
+        ]);
+
+        // Allowed routes for Pegawai
+        $allowed = [
+            '/',
+            '/products',
+            '/productions',
+            '/sales',
+            '/sales/pos',
+        ];
+
+        foreach ($allowed as $route) {
+            $response = $this->actingAs($pegawaiUser)->get($route);
+            $response->assertStatus(200);
+        }
+
+        // Owner-only routes that must return 403 for Pegawai
+        $forbidden = [
+            '/customers',
+            '/employees',
+            '/payrolls',
+            '/cash',
+            '/settings',
+        ];
+
+        foreach ($forbidden as $route) {
+            $response = $this->actingAs($pegawaiUser)->get($route);
+            $response->assertStatus(403);
         }
     }
 
@@ -138,7 +178,7 @@ class ComprehensiveRoutesAndLivewireTest extends TestCase
         ]);
         $token = $loginRes->json('data.token');
 
-        $headers = ['Authorization' => 'Bearer ' . $token];
+        $headers = ['Authorization' => 'Bearer '.$token];
 
         // 2. Dashboard summary
         $this->getJson('/api/v1/dashboard/summary', $headers)
@@ -169,7 +209,7 @@ class ComprehensiveRoutesAndLivewireTest extends TestCase
                     'product_id' => $this->sampleProduct->id,
                     'quantity' => 1.0,
                     'unit_price' => 38000,
-                ]
+                ],
             ],
         ], $headers);
         $checkoutRes->assertStatus(201)->assertJsonStructure(['success', 'data']);
@@ -198,5 +238,15 @@ class ComprehensiveRoutesAndLivewireTest extends TestCase
         $this->getJson('/api/v1/productions', $headers)
             ->assertStatus(200)
             ->assertJsonStructure(['success', 'data']);
+    }
+
+    public function test_productions_show_named_route_resolves_to_web_url(): void
+    {
+        $url = route('productions.show', $this->sampleBatch->id);
+        $this->assertStringNotContainsString('api/v1', $url);
+        $this->assertStringContainsString('/productions/'.$this->sampleBatch->id, $url);
+
+        $response = $this->actingAs($this->owner)->get($url);
+        $response->assertStatus(200);
     }
 }

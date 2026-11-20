@@ -3,9 +3,10 @@
         <div>
             <p class="eyebrow">Persediaan</p>
             <h1 class="page-title">Produk & stok ayam</h1>
-            <p class="page-description">Pantau persediaan ayam utuh & potongan, modal rata-rata HPP, dan belanja stok masuk.</p>
         </div>
+        @can('owner')
         <a href="{{ route('products.form') }}" class="btn btn-primary"><x-icon name="plus"/>Tambah produk</a>
+        @endcan
     </div>
     <x-feedback/>
 
@@ -23,66 +24,43 @@
             <section role="dialog" aria-modal="true" class="panel relative max-h-[90dvh] overflow-y-auto p-4 shadow-2xl" style="max-width: 380px; width: 100%;">
                 <div class="mb-2.5 flex items-start justify-between gap-2 border-b border-brand-border pb-2">
                     <div>
-                        <p class="eyebrow text-[10px]">Pembelian stok</p>
+                        <p class="eyebrow text-[10px]">Restok produk</p>
                         <h2 class="text-sm font-bold truncate max-w-[220px]">Stok masuk: {{ $restockProductName }}</h2>
-                        <p class="mt-0.5 text-[11px] text-brand-textGray">Kalkulasi modal rata-rata & kas.</p>
                     </div>
                     <button type="button" class="btn text-xs py-1 px-2" wire:click="closeRestock" aria-label="Tutup"><x-icon name="close"/></button>
                 </div>
 
-                <div class="mb-2.5 grid grid-cols-2 gap-2 rounded-lg bg-brand-bgMain p-2.5 text-xs">
+                <div class="mb-3 grid grid-cols-2 gap-2 rounded-lg bg-brand-bgMain p-2.5 text-xs">
                     <div>
                         <p class="text-[10px] text-brand-textGray">Stok saat ini</p>
-                        <p class="mt-0.5 font-semibold">{{ number_format($currentStock, 2, ',', '.') }} {{ $unit }}</p>
+                        <p class="mt-0.5 font-semibold">{{ number_format($currentStock, 2, ',', '.') }} {{ $restockUnit }}</p>
                     </div>
                     <div>
                         <p class="text-[10px] text-brand-textGray">HPP saat ini</p>
-                        <p class="mt-0.5 font-semibold">Rp {{ number_format($currentCost, 0, ',', '.') }}/{{ $unit }}</p>
+                        <p class="mt-0.5 font-semibold">Rp {{ number_format($currentHpp, 0, ',', '.') }}/{{ $restockUnit }}</p>
                     </div>
                 </div>
 
-                <form wire:submit="saveRestock" class="space-y-2.5">
+                <form wire:submit="saveRestock" class="space-y-3">
                     <label class="field text-xs">
-                        Jumlah masuk ({{ $unit }})
-                        <input wire:model.live.debounce.300ms="incomingStock" type="number" step="0.01" class="input text-xs" placeholder="Misal: 50" required>
+                        Jumlah masuk ({{ $restockUnit }}) *
+                        <input wire:model="incomingQty" type="number" step="0.01" class="input text-xs" placeholder="Contoh: 10" required>
+                        @error('incomingQty') <span class="text-[11px] text-red-600">{{ $message }}</span> @enderror
                     </label>
 
                     <label class="field text-xs">
-                        Total biaya beli (Rp)
-                        <input wire:model.live.debounce.300ms="purchasePriceTotal" type="number" step="1000" class="input text-xs" placeholder="Total belanja" required>
+                        Catatan Restok (Opsional)
+                        <input wire:model="restockNotes" type="text" class="input text-xs" placeholder="Contoh: Restok pasar / supplier">
                     </label>
 
-                    @if((float)$incomingStock > 0 && (float)$purchasePriceTotal > 0)
-                        @php
-                            $newTotalStock = (float)$currentStock + (float)$incomingStock;
-                            $oldValuation = (float)$currentStock * (float)$currentCost;
-                            $newAvgCost = $newTotalStock > 0 ? ($oldValuation + (float)$purchasePriceTotal) / $newTotalStock : 0;
-                        @endphp
-                        <div class="space-y-1.5 rounded-lg bg-[#eef4ff] p-2.5 text-xs">
-                            <div class="flex justify-between gap-2">
-                                <span class="text-brand-textGray">Stok akhir:</span>
-                                <strong>{{ number_format($newTotalStock, 2, ',', '.') }} {{ $unit }}</strong>
-                            </div>
-                            <div class="flex justify-between gap-2 border-t border-blue-100 pt-1.5">
-                                <span class="text-brand-textGray">HPP baru:</span>
-                                <strong class="text-brand-primary">Rp {{ number_format($newAvgCost, 0, ',', '.') }}/{{ $unit }}</strong>
-                            </div>
-                        </div>
-                    @endif
-
-                    <label class="field text-xs">
-                        Catatan (opsional)
-                        <input wire:model="notes" type="text" class="input text-xs" placeholder="Supplier / pasar...">
-                    </label>
-
-                    <p class="text-[10px] leading-tight text-brand-textGray">
-                        Otomatis menambah stok & mencatat pengeluaran kas.
-                    </p>
+                    <div class="mt-3 rounded-lg border border-emerald-200 bg-emerald-50 p-2.5 text-[11px] leading-tight text-emerald-800">
+                        Otomatis menambah stok produk & mencatat pengeluaran ke buku kas.
+                    </div>
 
                     <div class="flex justify-end gap-2 pt-2 border-t border-brand-border">
                         <button type="button" wire:click="closeRestock" class="btn text-xs py-1.5 px-3">Batal</button>
                         <button type="submit" class="btn btn-primary text-xs py-1.5 px-3" wire:loading.attr="disabled">
-                            <x-icon name="check"/>Simpan
+                            <x-icon name="check"/>Simpan Restok
                         </button>
                     </div>
                 </form>
@@ -167,12 +145,14 @@
                                     <button type="button" wire:click="openRestock({{ $product->id }})" class="btn text-xs py-1 px-2.5">
                                         Stok
                                     </button>
+                                    @can('owner')
                                     <a href="{{ route('products.form', $product->id) }}" class="btn text-xs py-1 px-2.5">
                                         Detail
                                     </a>
                                     <button type="button" wire:click="deleteProduct({{ $product->id }})" wire:confirm="Hapus produk ini dari daftar aktif?" class="btn btn-danger text-xs py-1 px-2.5">
                                         Hapus
                                     </button>
+                                    @endcan
                                 </div>
                             </td>
                         </tr>

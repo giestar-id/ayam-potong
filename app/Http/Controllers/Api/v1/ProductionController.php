@@ -24,6 +24,11 @@ class ProductionController extends Controller
 
         $batches = $query->latest('production_date')->latest('id')->get();
 
+        $batches->each(function (ProductionBatch $b) {
+            $b->pos_summary = $b->getPosSummary();
+            $b->effective_buy_price_per_kg = $b->effective_buy_price_per_kg;
+        });
+
         return response()->json([
             'success' => true,
             'data' => $batches,
@@ -33,6 +38,8 @@ class ProductionController extends Controller
     public function show(int $id): JsonResponse
     {
         $batch = ProductionBatch::with(['outputs.product'])->findOrFail($id);
+        $batch->pos_summary = $batch->getPosSummary();
+        $batch->effective_buy_price_per_kg = $batch->effective_buy_price_per_kg;
 
         return response()->json([
             'success' => true,
@@ -46,19 +53,47 @@ class ProductionController extends Controller
             'batch_number' => 'nullable|string|unique:production_batches,batch_number',
             'production_date' => 'nullable|date',
             'live_weight_kg' => 'required|numeric|gt:0',
+            'buy_price_per_kg' => 'nullable|numeric|min:0',
+            'raw_material_cost' => 'nullable|numeric|min:0',
+            'total_cost' => 'nullable|numeric|min:0',
+            'remaining_weight_kg' => 'nullable|numeric|min:0',
             'live_bird_count' => 'nullable|integer|min:0',
-            'raw_material_cost' => 'required|numeric|min:0',
             'additional_cost' => 'nullable|numeric|min:0',
             'notes' => 'nullable|string',
         ]);
 
+        if (isset($validated['total_cost']) && empty($validated['raw_material_cost'])) {
+            $validated['raw_material_cost'] = $validated['total_cost'];
+        }
+
         $batch = $this->productionService->createBatch($validated);
+        $batch->pos_summary = $batch->getPosSummary();
+        $batch->effective_buy_price_per_kg = $batch->effective_buy_price_per_kg;
 
         return response()->json([
             'success' => true,
             'message' => 'Batch produksi berhasil dibuat.',
             'data' => $batch,
         ], 201);
+    }
+
+    public function updateRemaining(Request $request, int $id): JsonResponse
+    {
+        $batch = ProductionBatch::findOrFail($id);
+
+        $validated = $request->validate([
+            'remaining_weight_kg' => 'required|numeric|min:0',
+        ]);
+
+        $batch = $this->productionService->updateRemaining($batch, (float) $validated['remaining_weight_kg']);
+        $batch->pos_summary = $batch->getPosSummary();
+        $batch->effective_buy_price_per_kg = $batch->effective_buy_price_per_kg;
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Sisa ayam batch berhasil diperbarui.',
+            'data' => $batch,
+        ]);
     }
 
     public function updateStage(Request $request, int $id): JsonResponse

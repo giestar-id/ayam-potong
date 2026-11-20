@@ -13,6 +13,7 @@ class User extends Authenticatable
 
     protected $fillable = [
         'name',
+        'phone',
         'email',
         'password',
         'role',
@@ -34,5 +35,20 @@ class User extends Authenticatable
     public function sales()
     {
         return $this->hasMany(Sale::class);
+    }
+
+    public function employee()
+    {
+        return $this->hasOne(Employee::class);
+    }
+
+    public function isOwner(): bool
+    {
+        return $this->role === 'owner' || $this->id === (int) static::min('id');
+    }
+
+    public function isPegawai(): bool
+    {
+        return $this->role === 'pegawai';
     }
 }

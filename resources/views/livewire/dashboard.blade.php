@@ -3,7 +3,6 @@
         <div>
             <p class="eyebrow">Ringkasan operasional</p>
             <h1 class="page-title">Dashboard</h1>
-            <p class="page-description">Ringkasan produksi ayam potong, penjualan kasir, dan keuangan usaha Anda.</p>
         </div>
         <div class="flex flex-wrap gap-2">
             <a href="{{ route('sales.index') }}" class="btn"><x-icon name="clock"/>Riwayat penjualan</a>
@@ -195,9 +194,11 @@
                     <dd class="mt-1 break-words font-heading text-base font-bold text-brand-primary">Rp {{ number_format($summary['net_cash'], 0, ',', '.') }}</dd>
                 </div>
             </dl>
-            <a href="{{ route('cash.index') }}" class="mt-4 flex items-center justify-between text-xs font-medium text-brand-primary">
-                Buka catatan kas lengkap<x-icon name="arrow"/>
-            </a>
+            @if(auth()->user()?->isOwner())
+                <a href="{{ route('cash.index') }}" class="mt-4 flex items-center justify-between text-xs font-medium text-brand-primary">
+                    Buka catatan kas lengkap<x-icon name="arrow"/>
+                </a>
+            @endif
         </section>
     </div>
 
@@ -393,7 +394,7 @@
             </div>
 
             <div class="mt-4 divide-y divide-[#eaeef2]">
-                @forelse($recentSales as $sale)
+                @forelse($recentSales->take(10) as $sale)
                     <div class="flex items-center justify-between py-3">
                         <div class="min-w-0">
                             <a href="{{ route('sales.index', ['search' => $sale->invoice_number]) }}" class="font-semibold text-brand-primary text-xs">{{ $sale->invoice_number }}</a>

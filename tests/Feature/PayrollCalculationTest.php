@@ -2,10 +2,13 @@
 
 namespace Tests\Feature;
 
+use App\Livewire\Payrolls\Index;
+use App\Models\CashFlow;
 use App\Models\Employee;
 use App\Models\User;
 use App\Services\PayrollService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Livewire\Livewire;
 use Tests\TestCase;
 
 class PayrollCalculationTest extends TestCase
@@ -13,7 +16,9 @@ class PayrollCalculationTest extends TestCase
     use RefreshDatabase;
 
     protected User $adminUser;
+
     protected Employee $employee;
+
     protected PayrollService $payrollService;
 
     protected function setUp(): void
@@ -70,12 +75,12 @@ class PayrollCalculationTest extends TestCase
             'is_active' => true,
         ]);
 
-        \Livewire\Livewire::actingAs($this->adminUser)
-            ->test(\App\Livewire\Payrolls\Index::class)
+        Livewire::actingAs($this->adminUser)
+            ->test(Index::class)
             ->call('addToCart', $this->employee->id)
             ->call('addToCart', $employee2->id)
-            ->set('cart.' . $this->employee->id . '.days', 6)
-            ->set('cart.' . $employee2->id . '.days', 5)
+            ->set('cart.'.$this->employee->id.'.days', 6)
+            ->set('cart.'.$employee2->id.'.days', 5)
             ->call('checkout')
             ->assertHasNoErrors()
             ->assertSet('cart', []);
@@ -93,6 +98,6 @@ class PayrollCalculationTest extends TestCase
         ]);
 
         // Total 2 cash flows for payroll expense
-        $this->assertEquals(2, \App\Models\CashFlow::where('category', 'payroll')->count());
+        $this->assertEquals(2, CashFlow::where('category', 'payroll')->count());
     }
 }

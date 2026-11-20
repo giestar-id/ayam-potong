@@ -4,7 +4,6 @@ namespace App\Livewire\Products;
 
 use App\Models\Product;
 use App\Services\ProductService;
-use Illuminate\Support\Str;
 use Illuminate\View\View;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Locked;
@@ -17,16 +16,25 @@ class Form extends Component
     public ?int $productId = null;
 
     public string $sku = '';
+
     public string $name = '';
+
     public string $unit = 'kg'; // 'kg' or 'ekor'
+
     public string $stock = '0';
+
     public string $min_stock = '5';
+
     public string $average_cost = '0';
+
     public string $selling_price = '0';
+
     public bool $is_active = true;
 
     public function mount(?int $id = null): void
     {
+        $this->authorize('owner');
+
         if ($id) {
             $product = Product::findOrFail($id);
             $this->productId = $product->id;
@@ -44,12 +52,12 @@ class Form extends Component
     public function save(ProductService $productService): mixed
     {
         $this->validate([
-            'sku' => 'nullable|string|max:50|unique:products,sku,' . ($this->productId ?? 'NULL'),
+            'sku' => 'nullable|string|max:50|unique:products,sku,'.($this->productId ?? 'NULL'),
             'name' => 'required|string|max:255',
             'unit' => 'required|in:kg,ekor',
             'stock' => 'required|numeric|min:0',
             'min_stock' => 'required|numeric|min:0',
-            'average_cost' => 'required|numeric|min:0',
+            'average_cost' => 'nullable|numeric|min:0',
             'selling_price' => 'required|numeric|min:0',
             'is_active' => 'boolean',
         ], [

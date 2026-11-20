@@ -53,7 +53,7 @@ class PayrollService
                 'reference_id' => $payroll->id,
                 'transaction_date' => $date,
                 'amount' => $totalSalary,
-                'description' => "Gaji mingguan {$employee->name} ({$daysWorked} hari kerja @ Rp " . number_format($dailyRate, 0, ',', '.') . ")",
+                'description' => "Gaji mingguan {$employee->name} ({$daysWorked} hari kerja @ Rp ".number_format($dailyRate, 0, ',', '.').')',
             ]);
 
             $this->invalidateCache();
@@ -64,6 +64,6 @@ class PayrollService
 
     public function invalidateCache(): void
     {
-        Cache::forget('dashboard_metrics_' . now()->toDateString());
+        Cache::forget('dashboard_metrics_'.now()->toDateString());
     }
 }

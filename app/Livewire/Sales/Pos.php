@@ -4,7 +4,6 @@ namespace App\Livewire\Sales;
 
 use App\Models\Customer;
 use App\Models\Product;
-use App\Models\Sale;
 use App\Services\TransactionService;
 use Illuminate\View\View;
 use Livewire\Attributes\Layout;
@@ -14,18 +13,24 @@ use Livewire\Component;
 class Pos extends Component
 {
     public string $search = '';
+
     public string $selectedUnit = ''; // filter by 'kg' or 'ekor'
 
     // Cart items: [productId => ['id' => int, 'name' => string, 'unit' => string, 'price' => float, 'qty' => float, 'subtotal' => float, 'notes' => string]]
     public array $cart = [];
 
     public ?int $customer_id = null;
+
     public string $discount_type = 'none'; // 'none', 'percent', 'fixed'
+
     public float $discount_value = 0;
 
     public string $payment_method = 'cash'; // 'cash' or 'debt'
+
     public string $paid_amount = '';
+
     public string $due_date = '';
+
     public string $notes = '';
 
     // Receipt Modal on success
@@ -54,6 +59,7 @@ class Pos extends Component
 
         if ($stock <= 0) {
             session()->flash('pos_error', "Stok {$product->name} telah habis!");
+
             return;
         }
 
@@ -61,6 +67,7 @@ class Pos extends Component
             $newQty = $this->cart[$productId]['qty'] + 1;
             if ($newQty > $stock) {
                 session()->flash('pos_error', "Stok {$product->name} tidak mencukupi (Tersedia: {$stock} {$product->unit}).");
+
                 return;
             }
             $this->cart[$productId]['qty'] = $newQty;
@@ -85,6 +92,7 @@ class Pos extends Component
         $qty = (float) $newQty;
         if ($qty <= 0) {
             $this->removeItem($productId);
+
             return;
         }
 
@@ -140,6 +148,7 @@ class Pos extends Component
         foreach ($this->cart as $item) {
             $subtotal += (float) ($item['subtotal'] ?? 0);
         }
+
         return round($subtotal, 2);
     }
 
@@ -152,6 +161,7 @@ class Pos extends Component
         if ($this->discount_type === 'fixed' && $this->discount_value > 0) {
             return min($subtotal, round($this->discount_value, 2));
         }
+
         return 0.0;
     }
 
@@ -167,6 +177,7 @@ class Pos extends Component
         if ($paid > $grandTotal) {
             return round($paid - $grandTotal, 2);
         }
+
         return 0.0;
     }
 
@@ -177,6 +188,7 @@ class Pos extends Component
         if ($paid < $grandTotal) {
             return round($grandTotal - $paid, 2);
         }
+
         return 0.0;
     }
 
@@ -184,6 +196,7 @@ class Pos extends Component
     {
         if (empty($this->cart)) {
             session()->flash('pos_error', 'Keranjang belanja masih kosong.');
+
             return null;
         }
 
@@ -191,12 +204,14 @@ class Pos extends Component
         $paid = (float) $this->paid_amount;
 
         if ($this->payment_method === 'debt' || $paid < $grandTotal) {
-            if (!$this->customer_id) {
+            if (! $this->customer_id) {
                 session()->flash('pos_error', 'Transaksi piutang / bayar tempo WAJIB memilih pelanggan.');
+
                 return null;
             }
-            if (!$this->due_date) {
+            if (! $this->due_date) {
                 session()->flash('pos_error', 'Transaksi piutang WAJIB mengisi tanggal jatuh tempo.');
+
                 return null;
             }
         }
@@ -229,6 +244,7 @@ class Pos extends Component
             return redirect()->route('sales.receipt', $sale->id);
         } catch (\Exception $e) {
             session()->flash('pos_error', $e->getMessage());
+
             return null;
         }
     }
@@ -240,7 +256,7 @@ class Pos extends Component
         if ($this->search !== '') {
             $query->where(function ($q) {
                 $q->where('name', 'like', "%{$this->search}%")
-                  ->orWhere('sku', 'like', "%{$this->search}%");
+                    ->orWhere('sku', 'like', "%{$this->search}%");
             });
         }
 

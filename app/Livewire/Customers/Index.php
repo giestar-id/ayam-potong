@@ -3,8 +3,6 @@
 namespace App\Livewire\Customers;
 
 use App\Models\Customer;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Locked;
@@ -17,18 +15,30 @@ class Index extends Component
     use WithPagination;
 
     public string $name = '';
+
     public string $phone = '';
+
     public string $address = '';
+
     public string $notes = '';
+
     public string $discount_type = 'none'; // 'none', 'percent', 'fixed'
+
     public string $discount_value = '0';
 
     public string $search = '';
 
     #[Locked]
     public ?int $customerId = null;
+
     public ?int $detailCustomerId = null;
+
     public bool $showFormModal = false;
+
+    public function mount(): void
+    {
+        $this->authorize('owner');
+    }
 
     public function updatedSearch(): void
     {
@@ -103,6 +113,7 @@ class Index extends Component
         $customer = Customer::findOrFail($id);
         if ($customer->sales()->exists()) {
             session()->flash('error', 'Pelanggan memiliki riwayat transaksi dan tidak dapat dihapus.');
+
             return;
         }
 
@@ -123,7 +134,7 @@ class Index extends Component
         if ($this->search !== '') {
             $query->where(function ($q) {
                 $q->where('name', 'like', "%{$this->search}%")
-                  ->orWhere('phone', 'like', "%{$this->search}%");
+                    ->orWhere('phone', 'like', "%{$this->search}%");
             });
         }
 

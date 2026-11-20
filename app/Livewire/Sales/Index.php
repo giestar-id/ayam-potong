@@ -2,7 +2,9 @@
 
 namespace App\Livewire\Sales;
 
+use App\Models\ProductionBatch;
 use App\Models\Sale;
+use App\Models\SaleItem;
 use App\Services\TransactionService;
 use Illuminate\View\View;
 use Livewire\Attributes\Layout;
@@ -31,7 +33,9 @@ class Index extends Component
 
     // Modal Pelunasan Piutang
     public ?int $selectedSaleId = null;
+
     public string $debtPayAmount = '';
+
     public string $debtPayNotes = '';
 
     public function updatingSearch(): void
@@ -86,7 +90,8 @@ class Index extends Component
         if ($this->search !== '') {
             $query->where(function ($q) {
                 $q->where('invoice_number', 'like', "%{$this->search}%")
-                  ->orWhereHas('customer', fn ($cq) => $cq->where('name', 'like', "%{$this->search}%"));
+                    ->orWhere('notes', 'like', "%{$this->search}%")
+                    ->orWhereHas('customer', fn ($cq) => $cq->where('name', 'like', "%{$this->search}%"));
             });
         }
 
@@ -100,12 +105,44 @@ class Index extends Component
 
         $sales = $query->latest('transaction_date')->latest('id')->paginate($this->perPage);
 
+        // Kalkulasi Ringkasan Finansial Hari Ini
+        $todayStr = now()->toDateString();
+        $todaySales = Sale::whereDate('transaction_date', $todayStr)->get();
+        $todayRevenue = (float) $todaySales->sum('grand_total');
+        $todaySoldKg = (float) SaleItem::whereIn('sale_id', $todaySales->pluck('id'))->sum('quantity');
+
+        $todayBatches = ProductionBatch::whereDate('production_date', $todayStr)->get();
+        if ($todayBatches->isEmpty()) {
+            $todayBatches = ProductionBatch::latest('production_date')->take(1)->get();
+        }
+
+        $usedBatchKg = 0.0;
+        $usedBatchCost = 0.0;
+        $remainingBatchKg = 0.0;
+        $remainingBatchCost = 0.0;
+
+        foreach ($todayBatches as $tb) {
+            $usedBatchKg += $tb->used_weight_kg;
+            $usedBatchCost += $tb->used_cost;
+            $remainingBatchKg += (float) $tb->remaining_weight_kg;
+            $remainingBatchCost += $tb->remaining_cost;
+        }
+
+        $profitToday = round($todayRevenue - $usedBatchCost, 2);
+
         return view('livewire.sales.index', [
             'sales' => $sales,
             'totalSalesCount' => Sale::count(),
             'totalRevenue' => Sale::sum('grand_total'),
             'totalPaid' => Sale::sum('paid_amount'),
             'totalRemainingDebt' => Sale::whereIn('payment_status', ['partial', 'unpaid'])->sum('remaining_debt'),
+            'todayRevenue' => $todayRevenue,
+            'todaySoldKg' => $todaySoldKg,
+            'usedBatchKg' => $usedBatchKg,
+            'usedBatchCost' => $usedBatchCost,
+            'remainingBatchKg' => $remainingBatchKg,
+            'remainingBatchCost' => $remainingBatchCost,
+            'profitToday' => $profitToday,
         ]);
     }
 }

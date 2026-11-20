@@ -21,6 +21,13 @@ class SettingController extends Controller
 
     public function update(Request $request): JsonResponse
     {
+        if (! $request->user()?->isOwner()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Hanya pemilik (owner) yang memiliki akses untuk mengubah pengaturan usaha.',
+            ], 403);
+        }
+
         $validated = $request->validate([
             'business_name' => 'required|string|max:255',
             'address' => 'nullable|string',

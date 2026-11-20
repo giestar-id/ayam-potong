@@ -17,7 +17,7 @@ class CustomerController extends Controller
             $search = $request->query('search');
             $query->where(function ($q) use ($search) {
                 $q->where('name', 'like', "%{$search}%")
-                  ->orWhere('phone', 'like', "%{$search}%");
+                    ->orWhere('phone', 'like', "%{$search}%");
             });
         }
 
@@ -83,6 +83,13 @@ class CustomerController extends Controller
 
     public function update(Request $request, int $id): JsonResponse
     {
+        if (! $request->user()?->isOwner()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Hanya pemilik (Owner) yang memiliki hak akses untuk mengubah data pelanggan.',
+            ], 403);
+        }
+
         $customer = Customer::findOrFail($id);
 
         $validated = $request->validate([
@@ -103,8 +110,15 @@ class CustomerController extends Controller
         ]);
     }
 
-    public function destroy(int $id): JsonResponse
+    public function destroy(Request $request, int $id): JsonResponse
     {
+        if (! $request->user()?->isOwner()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Hanya pemilik (Owner) yang memiliki hak akses untuk menghapus pelanggan.',
+            ], 403);
+        }
+
         $customer = Customer::findOrFail($id);
 
         if ($customer->sales()->exists()) {

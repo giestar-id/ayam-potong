@@ -22,9 +22,10 @@ class BusinessSetting extends Model
         try {
             $cached = Cache::get('business_settings_cache');
             if (is_array($cached)) {
-                $instance = new self();
+                $instance = new self;
                 $instance->setRawAttributes($cached, true);
                 $instance->exists = true;
+
                 return $instance;
             }
         } catch (\Throwable $e) {

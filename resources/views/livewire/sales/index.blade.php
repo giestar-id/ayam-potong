@@ -3,18 +3,17 @@
         <div>
             <p class="eyebrow">Transaksi</p>
             <h1 class="page-title">Penjualan & Piutang</h1>
-            <p class="page-description">Semua nota transaksi kasir, pembayaran tunai, dan saldo piutang pelanggan.</p>
         </div>
         <a href="{{ route('sales.pos') }}" class="btn btn-primary"><x-icon name="plus"/>Transaksi kasir baru</a>
     </div>
     <x-feedback/>
 
-    <!-- 4 Stat Cards using refrensi x-stat -->
+    <!-- 4 Stat Cards Ringkasan Omzet, Modal Terpakai, Keuntungan & Sisa Modal -->
     <div class="mb-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        <x-stat label="Total omzet penjualan" :value="'Rp ' . number_format($totalRevenue, 0, ',', '.')" note="Akumulasi nilai transaksi" icon="sales"/>
-        <x-stat label="Jumlah transaksi nota" :value="number_format($totalSalesCount) . ' nota'" note="Seluruh transaksi kasir" icon="clock"/>
-        <x-stat label="Total sudah dibayar" :value="'Rp ' . number_format($totalPaid, 0, ',', '.')" note="Penerimaan tunai & cicilan" icon="down"/>
-        <x-stat label="Sisa piutang tempo" :value="'Rp ' . number_format($totalRemainingDebt, 0, ',', '.')" note="Tagihan belum tertagih" icon="wallet"/>
+        <x-stat label="Omzet kasir hari ini" :value="'Rp ' . number_format($todayRevenue, 0, ',', '.')" :note="number_format($todaySoldKg, 1, ',', '.') . ' kg terjual hari ini'" icon="sales"/>
+        <x-stat label="Modal kotor terpakai" :value="'Rp ' . number_format($usedBatchCost, 0, ',', '.')" :note="number_format($usedBatchKg, 1, ',', '.') . ' kg ayam keluar (awal - sisa)'" icon="box"/>
+        <x-stat label="Keuntungan hari ini" :value="'Rp ' . number_format($profitToday, 0, ',', '.')" note="Laba kotor = omzet - modal keluar" icon="wallet"/>
+        <x-stat label="Sisa modal ayam" :value="'Rp ' . number_format($remainingBatchCost, 0, ',', '.')" :note="number_format($remainingBatchKg, 1, ',', '.') . ' kg sisa malam tersimpan'" icon="leaf"/>
     </div>
 
     <!-- Modal Catat Pembayaran Piutang (PRD 3.5) -->

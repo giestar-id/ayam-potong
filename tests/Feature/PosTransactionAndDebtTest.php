@@ -15,8 +15,11 @@ class PosTransactionAndDebtTest extends TestCase
     use RefreshDatabase;
 
     protected User $user;
+
     protected Product $productAyam;
+
     protected Customer $customerRestaurant;
+
     protected TransactionService $transactionService;
 
     protected function setUp(): void
@@ -67,7 +70,7 @@ class PosTransactionAndDebtTest extends TestCase
                 'product_id' => $this->productAyam->id,
                 'quantity' => 4.5,
                 'unit_price' => 45000,
-            ]
+            ],
         ];
 
         $sale = $this->transactionService->createSale([
@@ -103,7 +106,7 @@ class PosTransactionAndDebtTest extends TestCase
                 'product_id' => $this->productAyam->id,
                 'quantity' => 10.0,
                 'unit_price' => 45000,
-            ]
+            ],
         ];
 
         $sale = $this->transactionService->createSale([

@@ -20,7 +20,7 @@ class TransactionService
         $dateStr = now()->format('Ymd');
         $countToday = Sale::whereDate('created_at', now()->toDateString())->count() + 1;
 
-        return 'INV-' . $dateStr . '-' . str_pad((string) $countToday, 4, '0', STR_PAD_LEFT);
+        return 'INV-'.$dateStr.'-'.str_pad((string) $countToday, 4, '0', STR_PAD_LEFT);
     }
 
     /**
@@ -75,7 +75,7 @@ class TransactionService
             $discountValue = (float) ($data['discount_value'] ?? 0);
 
             // Jika tidak ada diskon manual dan ada pelanggan dengan diskon default
-            if ((!$discountType || $discountType === 'none') && $customer && $customer->discount_type !== 'none') {
+            if ((! $discountType || $discountType === 'none') && $customer && $customer->discount_type !== 'none') {
                 $discountType = $customer->discount_type;
                 $discountValue = (float) $customer->discount_value;
             }
@@ -97,10 +97,10 @@ class TransactionService
                 $remainingDebt = 0.0;
             } else {
                 // Kurang bayar = Piutang (Wajib pilih pelanggan & jatuh tempo)
-                if (!$customerId) {
+                if (! $customerId) {
                     throw new InvalidArgumentException('Transaksi piutang wajib memilih pelanggan.');
                 }
-                if (!$dueDate) {
+                if (! $dueDate) {
                     throw new InvalidArgumentException('Transaksi piutang wajib mengisi tanggal jatuh tempo.');
                 }
 
@@ -153,7 +153,7 @@ class TransactionService
                     'reference_id' => $sale->id,
                     'transaction_date' => $transactionDate,
                     'amount' => $actualReceived,
-                    'description' => ($paymentStatus === 'paid' ? 'Penjualan tunai lunas nota ' : 'DP penjualan piutang nota ') . $sale->invoice_number,
+                    'description' => ($paymentStatus === 'paid' ? 'Penjualan tunai lunas nota ' : 'DP penjualan piutang nota ').$sale->invoice_number,
                 ]);
             }
 
@@ -181,7 +181,7 @@ class TransactionService
         }
 
         if ($amount > (float) $sale->remaining_debt) {
-            throw new InvalidArgumentException('Nominal pembayaran melebihi sisa piutang (Sisa: Rp ' . number_format($sale->remaining_debt, 0, ',', '.') . ').');
+            throw new InvalidArgumentException('Nominal pembayaran melebihi sisa piutang (Sisa: Rp '.number_format($sale->remaining_debt, 0, ',', '.').').');
         }
 
         return DB::transaction(function () use ($sale, $amount, $notes, $paymentDate) {
@@ -215,7 +215,7 @@ class TransactionService
                 'reference_id' => $payment->id,
                 'transaction_date' => $date,
                 'amount' => $amount,
-                'description' => "Pelunasan/Cicilan piutang nota {$sale->invoice_number}" . ($sale->customer ? " ({$sale->customer->name})" : ''),
+                'description' => "Pelunasan/Cicilan piutang nota {$sale->invoice_number}".($sale->customer ? " ({$sale->customer->name})" : ''),
             ]);
 
             $this->invalidateCache();

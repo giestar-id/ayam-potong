@@ -2,7 +2,6 @@
 
 namespace Tests\Unit;
 
-use App\Models\CashFlow;
 use App\Models\Product;
 use App\Services\ProductService;
 use Illuminate\Foundation\Testing\RefreshDatabase;

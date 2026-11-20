@@ -5,6 +5,7 @@ namespace App\Livewire\Auth;
 use App\Models\BusinessSetting;
 use App\Models\User;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Str;
 use Illuminate\View\View;
@@ -17,7 +18,9 @@ use Livewire\Component;
 class Login extends Component
 {
     public string $email = '';
+
     public string $password = '';
+
     public bool $remember = false;
 
     public function mount(): void
@@ -30,33 +33,45 @@ class Login extends Component
 
     public function login(): mixed
     {
-        $credentials = $this->validate([
-            'email' => 'required|email',
+        $this->validate([
+            'email' => 'required|string',
             'password' => 'required|string',
             'remember' => 'boolean',
         ], [
-            'email.required' => 'Email wajib diisi.',
+            'email.required' => 'Nomor HP atau email wajib diisi.',
             'password.required' => 'Kata sandi wajib diisi.',
         ]);
 
-        $key = 'login:' . Str::lower($this->email) . '|' . request()->ip();
+        $identifier = trim($this->email);
+        $key = 'login:'.Str::lower($identifier).'|'.request()->ip();
 
         if (RateLimiter::tooManyAttempts($key, 5)) {
-            $this->addError('email', 'Terlalu banyak percobaan login. Silakan tunggu ' . RateLimiter::availableIn($key) . ' detik.');
+            $this->addError('email', 'Terlalu banyak percobaan login. Silakan tunggu '.RateLimiter::availableIn($key).' detik.');
+
             return null;
         }
 
-        unset($credentials['remember']);
+        $user = User::where('email', $identifier)
+            ->orWhere('phone', $identifier)
+            ->first();
 
-        if (Auth::attempt($credentials, (bool) $this->remember)) {
+        if ($user && Hash::check($this->password, $user->password)) {
+            if ($user->employee && ! $user->employee->is_active) {
+                RateLimiter::hit($key, 60);
+                $this->addError('email', 'Akun pegawai Anda sedang dinonaktifkan. Silakan hubungi pemilik gerai.');
+
+                return null;
+            }
+
             RateLimiter::clear($key);
+            Auth::login($user, (bool) $this->remember);
             session()->regenerate();
 
             return redirect()->intended(route('dashboard'));
         }
 
         RateLimiter::hit($key, 60);
-        $this->addError('email', 'Email atau kata sandi tidak sesuai.');
+        $this->addError('email', 'Nomor HP / email atau kata sandi tidak sesuai.');
 
         return null;
     }

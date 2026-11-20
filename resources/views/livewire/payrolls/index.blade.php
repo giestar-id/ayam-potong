@@ -3,7 +3,6 @@
         <div>
             <p class="eyebrow">Keuangan & tim</p>
             <h1 class="page-title">Pembayaran gaji</h1>
-            <p class="page-description">Pilih pekerja, atur hari kerja mingguan, lalu bayar sekaligus ke kas pengeluaran.</p>
         </div>
         <a href="{{ route('employees.index') }}" class="btn">
             <x-icon name="users"/>Kelola data pekerja

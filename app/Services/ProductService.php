@@ -114,7 +114,7 @@ class ProductService
                 'reference_id' => $purchase->id,
                 'transaction_date' => $date,
                 'amount' => $totalCost,
-                'description' => "Belanja stok {$product->name}: {$quantity} {$product->unit} @ Rp " . number_format($costPerUnit, 0, ',', '.'),
+                'description' => "Belanja stok {$product->name}: {$quantity} {$product->unit} @ Rp ".number_format($costPerUnit, 0, ',', '.'),
             ]);
 
             $this->invalidateCache();
@@ -126,6 +126,6 @@ class ProductService
     public function invalidateCache(): void
     {
         Cache::forget('products_catalog_active');
-        Cache::forget('dashboard_metrics_' . now()->toDateString());
+        Cache::forget('dashboard_metrics_'.now()->toDateString());
     }
 }

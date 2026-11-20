@@ -12,24 +12,38 @@
 </head>
 @php
     $biz = \App\Models\BusinessSetting::current();
-    $groups = [
-        'Ringkasan' => [
-            ['dashboard', [], 'Dashboard', 'grid', request()->routeIs('dashboard')],
-            ['sales.pos', [], 'Kasir / POS', 'sales', request()->routeIs('sales.pos')],
-        ],
-        'Operasional' => [
-            ['products.index', [], 'Produk & Stok', 'box', request()->routeIs('products.*')],
-            ['productions.index', [], 'Produksi Ayam', 'leaf', request()->routeIs('productions.*')],
-            ['sales.index', [], 'Penjualan & Piutang', 'clock', request()->routeIs('sales.index')],
-            ['customers.index', [], 'Pelanggan', 'users', request()->routeIs('customers.*')],
-        ],
-        'Keuangan & Tim' => [
-            ['cash.index', ['direction' => 'Pemasukan'], 'Pemasukan', 'down', request()->routeIs('cash.*') && request('direction', 'Pemasukan') === 'Pemasukan'],
-            ['cash.index', ['direction' => 'Pengeluaran'], 'Pengeluaran', 'up', request()->routeIs('cash.*') && request('direction') === 'Pengeluaran'],
-            ['payrolls.index', [], 'Pembayaran Gaji', 'wallet', request()->routeIs('payrolls.*')],
-            ['employees.index', [], 'Karyawan', 'users', request()->routeIs('employees.*')],
-        ],
-    ];
+    $isOwner = auth()->user()?->isOwner() ?? true;
+
+    if ($isOwner) {
+        $groups = [
+            'Ringkasan' => [
+                ['dashboard', [], 'Dashboard', 'grid', request()->routeIs('dashboard')],
+                ['sales.pos', [], 'Kasir / POS', 'sales', request()->routeIs('sales.pos')],
+            ],
+            'Operasional' => [
+                ['products.index', [], 'Produk & Stok', 'box', request()->routeIs('products.*')],
+                ['productions.index', [], 'Produksi Ayam', 'leaf', request()->routeIs('productions.*')],
+                ['sales.index', [], 'Penjualan & Piutang', 'clock', request()->routeIs('sales.index')],
+                ['customers.index', [], 'Pelanggan', 'users', request()->routeIs('customers.*')],
+            ],
+            'Keuangan & Tim' => [
+                ['cash.index', ['direction' => 'Pemasukan'], 'Pemasukan', 'down', request()->routeIs('cash.*') && request('direction', 'Pemasukan') === 'Pemasukan'],
+                ['cash.index', ['direction' => 'Pengeluaran'], 'Pengeluaran', 'up', request()->routeIs('cash.*') && request('direction') === 'Pengeluaran'],
+                ['payrolls.index', [], 'Pembayaran Gaji', 'wallet', request()->routeIs('payrolls.*')],
+                ['employees.index', [], 'Karyawan', 'users', request()->routeIs('employees.*')],
+            ],
+        ];
+    } else {
+        $groups = [
+            'Menu Utama' => [
+                ['dashboard', [], 'Beranda', 'grid', request()->routeIs('dashboard')],
+                ['productions.index', [], 'Produksi', 'leaf', request()->routeIs('productions.*')],
+                ['sales.pos', [], 'Kasir', 'sales', request()->routeIs('sales.pos')],
+                ['sales.index', [], 'Penjualan', 'clock', request()->routeIs('sales.index')],
+                ['products.index', [], 'Produk', 'box', request()->routeIs('products.*')],
+            ],
+        ];
+    }
 @endphp
 <body x-data="{ menuOpen: false }" @keydown.escape.window="menuOpen = false">
 <x-notification/>
@@ -54,12 +68,21 @@
         @endforeach
     </nav>
     <div class="shrink-0 space-y-1 border-t border-white/10 px-2 pb-4 pt-3">
-        <a href="{{ route('settings') }}" @class(['nav-link', 'is-active' => request()->routeIs('settings')])><x-icon name="settings"/>Pengaturan</a>
+        @if($isOwner)
+            <a href="{{ route('settings') }}" @class(['nav-link', 'is-active' => request()->routeIs('settings')])><x-icon name="settings"/>Pengaturan</a>
+        @endif
         <form action="{{ route('logout') }}" method="POST">@csrf<button class="nav-link w-full" type="submit"><x-icon name="logout"/>Keluar</button></form>
-        <a href="{{ route('settings') }}" class="mx-1 mt-3 flex items-center gap-3 rounded-xl bg-brand-secondary px-3 py-3">
-            <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#d8e2ff] text-sm font-semibold text-brand-primary">{{ mb_substr(auth()->user()->name ?? 'P', 0, 1) }}</span>
-            <span class="min-w-0"><span class="block truncate text-[13px] font-medium">{{ auth()->user()->name ?? 'Owner' }}</span><span class="mt-0.5 block text-[11px] text-[#adc6ff]">Pemilik Usaha</span></span>
-        </a>
+        @if($isOwner)
+            <a href="{{ route('settings') }}" class="mx-1 mt-3 flex items-center gap-3 rounded-xl bg-brand-secondary px-3 py-3">
+                <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#d8e2ff] text-sm font-semibold text-brand-primary">{{ mb_substr(auth()->user()->name ?? 'P', 0, 1) }}</span>
+                <span class="min-w-0"><span class="block truncate text-[13px] font-medium">{{ auth()->user()->name ?? 'Owner' }}</span><span class="mt-0.5 block text-[11px] text-[#adc6ff]">Pemilik Usaha</span></span>
+            </a>
+        @else
+            <div class="mx-1 mt-3 flex items-center gap-3 rounded-xl bg-brand-secondary px-3 py-3">
+                <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#d8e2ff] text-sm font-semibold text-brand-primary">{{ mb_substr(auth()->user()->name ?? 'P', 0, 1) }}</span>
+                <span class="min-w-0"><span class="block truncate text-[13px] font-medium">{{ auth()->user()->name ?? 'Pegawai' }}</span><span class="mt-0.5 block text-[11px] text-[#adc6ff]">Pegawai Gerai</span></span>
+            </div>
+        @endif
     </div>
 </aside>
 <div class="min-h-dvh lg:pl-64">
@@ -67,7 +90,11 @@
         <button @click="menuOpen = !menuOpen" :aria-expanded="menuOpen" aria-controls="main-navigation" aria-label="Buka navigasi" class="btn shrink-0 rounded-lg border-0 px-2 lg:hidden"><x-icon name="menu"/></button>
         <div class="ml-auto flex shrink-0 items-center gap-3">
             <span class="hidden items-center gap-2 rounded-lg bg-[#f0f4f8] px-3 py-2 text-xs text-brand-textGray xl:flex"><x-icon name="calendar"/>{{ now('Asia/Jakarta')->locale('id')->translatedFormat('d F Y') }}</span>
-            <a href="{{ route('settings') }}" aria-label="Pengaturan akun" class="flex h-8 w-8 items-center justify-center rounded-full bg-[#d8e2ff] text-xs font-semibold text-brand-primary">{{ mb_substr(auth()->user()->name ?? 'P', 0, 1) }}</a>
+            @if($isOwner)
+                <a href="{{ route('settings') }}" aria-label="Pengaturan akun" class="flex h-8 w-8 items-center justify-center rounded-full bg-[#d8e2ff] text-xs font-semibold text-brand-primary">{{ mb_substr(auth()->user()->name ?? 'P', 0, 1) }}</a>
+            @else
+                <span class="flex h-8 w-8 items-center justify-center rounded-full bg-[#d8e2ff] text-xs font-semibold text-brand-primary">{{ mb_substr(auth()->user()->name ?? 'P', 0, 1) }}</span>
+            @endif
         </div>
     </header>
     <main id="main-content" class="mx-auto max-w-[1600px] px-4 py-6 sm:px-6">{{ $slot }}</main>
