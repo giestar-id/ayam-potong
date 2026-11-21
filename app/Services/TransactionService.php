@@ -52,6 +52,12 @@ class TransactionService
 
                 $product = Product::lockForUpdate()->findOrFail($productId);
 
+                if ((float) $product->stock < $requestedQty) {
+                    throw new InvalidArgumentException(
+                        "Stok {$product->name} tidak mencukupi (tersedia: {$product->stock} {$product->unit}, diminta: {$requestedQty} {$product->unit})."
+                    );
+                }
+
                 $unitPrice = isset($item['unit_price']) && (float) $item['unit_price'] >= 0
                     ? (float) $item['unit_price']
                     : (float) $product->selling_price;
