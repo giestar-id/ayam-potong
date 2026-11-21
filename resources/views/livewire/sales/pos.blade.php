@@ -59,7 +59,7 @@
                                 <span class="text-[9px] text-brand-textGray">per {{ $product->unit }}</span>
                             </span>
                             <span class="pos-product-add flex h-7 w-7 shrink-0 items-center justify-center rounded-lg">
-                                <x-icon name="plus" class="h-4 w-4"/>
+                                <x-icon name="cart" class="h-4 w-4"/>
                             </span>
                         </span>
                     </button>
