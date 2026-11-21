@@ -91,21 +91,16 @@ class ProductController extends Controller
 
     public function update(Request $request, int $id): JsonResponse
     {
-        if (! $request->user()?->isOwner()) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Hanya pemilik (Owner) yang memiliki hak akses untuk mengubah data produk katalog.',
-            ], 403);
-        }
-
         $product = Product::findOrFail($id);
 
         $validated = $request->validate([
             'sku' => 'nullable|string|max:50|unique:products,sku,'.$product->id,
-            'name' => 'required|string|max:255',
-            'unit' => 'required|in:kg,ekor',
+            'name' => 'sometimes|required|string|max:255',
+            'unit' => 'sometimes|required|in:kg,ekor',
+            'stock' => 'nullable|numeric|min:0',
             'min_stock' => 'nullable|numeric|min:0',
-            'selling_price' => 'required|numeric|min:0',
+            'average_cost' => 'nullable|numeric|min:0',
+            'selling_price' => 'sometimes|required|numeric|min:0',
             'is_active' => 'nullable|boolean',
         ]);
 

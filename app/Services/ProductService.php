@@ -35,7 +35,9 @@ class ProductService
             'sku' => $data['sku'] ?? $product->sku,
             'name' => $data['name'] ?? $product->name,
             'unit' => $data['unit'] ?? $product->unit,
+            'stock' => array_key_exists('stock', $data) ? $data['stock'] : $product->stock,
             'min_stock' => $data['min_stock'] ?? $product->min_stock,
+            'average_cost' => $data['average_cost'] ?? $product->average_cost,
             'selling_price' => $data['selling_price'] ?? $product->selling_price,
             'is_active' => $data['is_active'] ?? $product->is_active,
         ]);
