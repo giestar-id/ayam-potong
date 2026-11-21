@@ -75,6 +75,10 @@
 
         <!-- POS Cart Drawer & Checkout -->
         <section id="pos-cart" class="panel pos-drawer overflow-hidden" :class="cartOpen ? 'is-open' : 'is-closed'">
+            <!-- Mobile drawer drag / close chevron button (panah bawah ketika keranjang terbuka) -->
+            <button type="button" @click="cartOpen = false" class="flex w-full items-center justify-center py-2 text-slate-400 hover:text-slate-600 xl:hidden" aria-label="Tutup keranjang">
+                <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg>
+            </button>
             <div class="flex shrink-0 items-center justify-between gap-3 border-b border-[#eaeef2] bg-white p-5">
                 <div class="min-w-0">
                     <h2 class="text-base font-semibold">Keranjang transaksi</h2>
