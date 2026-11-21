@@ -46,16 +46,9 @@
             <div class="my-2">
                 <p class="card-fit-value text-brand-textDark font-bold" title="Rp {{ number_format($posSummary['remaining_cost'], 0, ',', '.') }}">Rp {{ number_format($posSummary['remaining_cost'], 0, ',', '.') }}</p>
                 <p class="text-xs font-medium text-brand-textGray mt-0.5 truncate">
-                    @if($batch->average_weight_per_bird && $batch->average_weight_per_bird > 0)
-                        Sisa: {{ (int) ($batch->remaining_bird_count ?? 0) }} ekor (±{{ number_format($batch->remaining_weight_kg, 1, ',', '.') }} kg)
-                        @if((int) ($batch->dead_bird_count ?? 0) > 0)
-                            · <span class="text-red-500 font-semibold">Mati: {{ (int) $batch->dead_bird_count }} ekor</span>
-                        @endif
-                    @else
-                        Sisa: {{ (int) ($batch->remaining_bird_count ?? 0) }} ekor
-                        @if((int) ($batch->dead_bird_count ?? 0) > 0)
-                            · <span class="text-red-500 font-semibold">Mati: {{ (int) $batch->dead_bird_count }} ekor</span>
-                        @endif
+                    Sisa: {{ (int) ($batch->remaining_bird_count ?? 0) }} ekor
+                    @if((int) ($batch->dead_bird_count ?? 0) > 0)
+                        · <span class="text-red-500 font-semibold">Mati: {{ (int) $batch->dead_bird_count }} ekor</span>
                     @endif
                 </p>
             </div>
