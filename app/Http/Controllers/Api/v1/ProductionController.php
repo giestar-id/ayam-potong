@@ -82,10 +82,15 @@ class ProductionController extends Controller
         $batch = ProductionBatch::findOrFail($id);
 
         $validated = $request->validate([
-            'remaining_weight_kg' => 'required|numeric|min:0',
+            'remaining_birds' => 'nullable|integer|min:0',
+            'remaining_bird_count' => 'nullable|integer|min:0',
+            'remaining_weight_kg' => 'nullable|numeric|min:0',
         ]);
 
-        $batch = $this->productionService->updateRemaining($batch, (float) $validated['remaining_weight_kg']);
+        $birds = isset($validated['remaining_birds']) ? (int) $validated['remaining_birds'] : (isset($validated['remaining_bird_count']) ? (int) $validated['remaining_bird_count'] : null);
+        $weight = isset($validated['remaining_weight_kg']) ? (float) $validated['remaining_weight_kg'] : null;
+
+        $batch = $this->productionService->updateRemaining($batch, $weight, $birds);
         $batch->pos_summary = $batch->getPosSummary();
         $batch->effective_buy_price_per_kg = $batch->effective_buy_price_per_kg;
 

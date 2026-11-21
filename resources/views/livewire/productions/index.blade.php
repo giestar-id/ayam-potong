@@ -25,30 +25,52 @@
                 <form wire:submit="saveRemaining" class="space-y-3">
                     <div class="rounded-lg bg-slate-50 p-2.5 border border-slate-200 text-xs space-y-1">
                         <div class="flex justify-between">
-                            <span class="text-brand-textGray">Kilo beli awal:</span>
-                            <span class="font-semibold">{{ number_format($selectedBatchLiveWeight, 1, ',', '.') }} kg</span>
+                            <span class="text-brand-textGray">Beli awal:</span>
+                            <span class="font-semibold">{{ number_format($selectedBatchLiveWeight, 1, ',', '.') }} kg ({{ $selectedBatchLiveBirdCount > 0 ? $selectedBatchLiveBirdCount . ' ekor' : 'Tanpa hitung ekor' }})</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-brand-textGray">Rata-rata bobot:</span>
+                            <span class="font-semibold text-brand-primary">± {{ number_format($selectedBatchAvgWeight, 2, ',', '.') }} kg / ekor</span>
                         </div>
                     </div>
 
                     <div class="form-group mb-0">
-                        <label for="modal_remaining_weight" class="form-label text-xs">Sisa ayam (kg) <span class="text-red-500">*</span></label>
+                        <label for="modal_remaining_birds" class="form-label text-xs">Sisa ayam (ekor) <span class="text-red-500">*</span></label>
                         <div class="relative">
                             <input
                                 type="number"
-                                step="0.1"
+                                step="1"
                                 min="0"
-                                id="modal_remaining_weight"
-                                wire:model="selectedBatchRemaining"
+                                id="modal_remaining_birds"
+                                wire:model.live="selectedBatchRemaining"
                                 class="form-input text-sm @error('selectedBatchRemaining') border-red-500 @enderror"
-                                placeholder="0.0"
+                                placeholder="0"
                                 required
                                 autofocus
                             />
-                            <span class="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-brand-textGray font-semibold">kg</span>
+                            <span class="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-brand-textGray font-semibold">ekor</span>
                         </div>
                         @error('selectedBatchRemaining')
                             <p class="text-xs text-red-500 mt-1">{{ $message }}</p>
                         @enderror
+                    </div>
+
+                    @php
+                        $inputBirds = max(0, (int) ($selectedBatchRemaining ?: 0));
+                        $estKg = round($inputBirds * $selectedBatchAvgWeight, 2);
+                        $estCost = round($estKg * $selectedBatchBuyPrice, 2);
+                    @endphp
+                    <div class="rounded-lg bg-blue-50/70 p-2.5 border border-blue-100 text-[11px] space-y-1">
+                        <div class="flex items-center gap-1.5 font-semibold text-brand-primary">
+                            <x-icon name="box" class="h-3.5 w-3.5"/>
+                            <span>Estimasi Konversi:</span>
+                        </div>
+                        <p class="font-medium text-brand-textDark">
+                            Setara ± {{ number_format($estKg, 1, ',', '.') }} kg · Nilai modal: Rp {{ number_format($estCost, 0, ',', '.') }}
+                        </p>
+                        <p class="text-[10px] text-slate-500 pt-1 border-t border-blue-100">
+                            * Catatan: Bobot kilogram di atas merupakan estimasi berdasarkan rata-rata bobot batch ayam datang, bukan hasil timbangan pasti.
+                        </p>
                     </div>
 
                     <div class="flex items-center justify-end gap-2 pt-2 border-t border-brand-border">
@@ -124,7 +146,8 @@
                                 Rp {{ number_format($batch->raw_material_cost, 0, ',', '.') }}
                             </td>
                             <td class="whitespace-nowrap text-right font-medium text-xs">
-                                {{ number_format($batch->remaining_weight_kg, 1, ',', '.') }} kg
+                                {{ (int) ($batch->remaining_bird_count ?? round($batch->remaining_weight_kg / max(0.1, $batch->average_weight_per_bird))) }} ekor
+                                <span class="block text-[10px] text-brand-textGray">±{{ number_format($batch->remaining_weight_kg, 1, ',', '.') }} kg</span>
                             </td>
                             <td class="whitespace-nowrap text-right text-xs text-brand-textGray">
                                 Rp {{ number_format($batch->remaining_cost, 0, ',', '.') }}

@@ -20,6 +20,7 @@ class ProductionBatch extends Model
         'additional_cost',
         'total_output_weight_kg',
         'remaining_weight_kg',
+        'remaining_bird_count',
         'shrinkage_kg',
         'notes',
     ];
@@ -35,6 +36,7 @@ class ProductionBatch extends Model
             'additional_cost' => 'decimal:2',
             'total_output_weight_kg' => 'decimal:2',
             'remaining_weight_kg' => 'decimal:2',
+            'remaining_bird_count' => 'integer',
             'shrinkage_kg' => 'decimal:2',
         ];
     }
@@ -42,6 +44,15 @@ class ProductionBatch extends Model
     public function outputs()
     {
         return $this->hasMany(ProductionOutput::class);
+    }
+
+    public function getAverageWeightPerBirdAttribute(): float
+    {
+        if ((float) $this->live_bird_count > 0 && (float) $this->live_weight_kg > 0) {
+            return round((float) $this->live_weight_kg / (float) $this->live_bird_count, 2);
+        }
+
+        return 2.0;
     }
 
     public function getEffectiveBuyPricePerKgAttribute(): float
@@ -92,6 +103,10 @@ class ProductionBatch extends Model
         $usedWeightKg = max(0.0, round($liveWeight - $remainingWeight, 2));
         $usedCost = round($usedWeightKg * $buyPrice, 2);
         $remainingCost = round($remainingWeight * $buyPrice, 2);
+        $remainingBirds = (int) ($this->remaining_bird_count ?? 0);
+        if ($remainingBirds <= 0 && $remainingWeight > 0) {
+            $remainingBirds = (int) round($remainingWeight / max(0.1, $this->average_weight_per_bird));
+        }
 
         // Penyusutan: modal kotor keluar dikurangi hasil terjual di kasir POS
         $shrinkageKg = max(0.0, round($usedWeightKg - $soldWeightKg, 2));
@@ -110,6 +125,9 @@ class ProductionBatch extends Model
             'used_weight_kg' => $usedWeightKg,
             'used_cost' => $usedCost,
             'remaining_weight_kg' => $remainingWeight,
+            'remaining_bird_count' => $remainingBirds,
+            'remaining_birds' => $remainingBirds,
+            'average_weight_per_bird' => $this->average_weight_per_bird,
             'remaining_cost' => $remainingCost,
             'shrinkage_kg' => $shrinkageKg,
             'shrinkage_pct' => $shrinkagePct,

@@ -82,10 +82,23 @@ class ProductionService
         return $batch;
     }
 
-    public function updateRemaining(ProductionBatch $batch, float $remainingWeight): ProductionBatch
+    public function updateRemaining(ProductionBatch $batch, ?float $remainingWeight = null, ?int $remainingBirds = null): ProductionBatch
     {
-        $remainingWeight = max(0.0, round($remainingWeight, 2));
+        $avgWeight = $batch->average_weight_per_bird;
+
+        if ($remainingBirds !== null) {
+            $remainingBirds = max(0, $remainingBirds);
+            $remainingWeight = round($remainingBirds * $avgWeight, 2);
+        } elseif ($remainingWeight !== null) {
+            $remainingWeight = max(0.0, round($remainingWeight, 2));
+            $remainingBirds = (int) round($remainingWeight / max(0.1, $avgWeight));
+        } else {
+            $remainingBirds = 0;
+            $remainingWeight = 0.0;
+        }
+
         $batch->update([
+            'remaining_bird_count' => $remainingBirds,
             'remaining_weight_kg' => $remainingWeight,
         ]);
 

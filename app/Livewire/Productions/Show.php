@@ -17,6 +17,8 @@ class Show extends Component
     #[Locked]
     public int $batchId;
 
+    public string $remaining_birds = '0';
+
     public string $remaining_weight_kg = '0';
 
     public string $additional_cost = '0';
@@ -30,6 +32,7 @@ class Show extends Component
     {
         $batch = ProductionBatch::with(['outputs.product'])->findOrFail($id);
         $this->batchId = $batch->id;
+        $this->remaining_birds = (string) ((int) ($batch->remaining_bird_count ?? round($batch->remaining_weight_kg / max(0.1, $batch->average_weight_per_bird))));
         $this->remaining_weight_kg = (string) ((float) $batch->remaining_weight_kg);
         $this->additional_cost = (string) $batch->additional_cost;
         $this->notes = (string) ($batch->notes ?? '');
@@ -50,17 +53,18 @@ class Show extends Component
 
     public function updateRemaining(ProductionService $productionService): void
     {
-        $weight = (float) $this->remaining_weight_kg;
-        if ($weight < 0) {
-            session()->flash('error', 'Kuantitas sisa ayam (kg) harus lebih besar atau sama dengan 0.');
+        $birds = (int) $this->remaining_birds;
+        if ($birds < 0) {
+            session()->flash('error', 'Kuantitas sisa ayam (ekor) harus angka bulat lebih besar atau sama dengan 0.');
 
             return;
         }
 
         $batch = ProductionBatch::findOrFail($this->batchId);
-        $productionService->updateRemaining($batch, $weight);
+        $productionService->updateRemaining($batch, null, $birds);
+        $this->remaining_weight_kg = (string) ((float) $batch->fresh()->remaining_weight_kg);
 
-        session()->flash('success', "Sisa ayam berhasil diperbarui menjadi {$weight} kg. Perhitungan susut dan keuntungan otomatis diperbarui.");
+        session()->flash('success', "Sisa ayam berhasil diperbarui menjadi {$birds} ekor. Perhitungan susut dan keuntungan otomatis diperbarui.");
     }
 
     public function updateAdditionalCost(ProductionService $productionService): void

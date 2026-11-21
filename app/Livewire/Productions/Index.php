@@ -29,6 +29,12 @@ class Index extends Component
 
     public float $selectedBatchLiveWeight = 0;
 
+    public int $selectedBatchLiveBirdCount = 0;
+
+    public float $selectedBatchAvgWeight = 2.0;
+
+    public float $selectedBatchBuyPrice = 0;
+
     public string $selectedBatchRemaining = '0';
 
     public function openUpdateRemaining(int $batchId): void
@@ -37,7 +43,10 @@ class Index extends Component
         $this->selectedBatchId = $batch->id;
         $this->selectedBatchNumber = $batch->batch_number;
         $this->selectedBatchLiveWeight = (float) $batch->live_weight_kg;
-        $this->selectedBatchRemaining = (string) ((float) $batch->remaining_weight_kg);
+        $this->selectedBatchLiveBirdCount = (int) ($batch->live_bird_count ?? 0);
+        $this->selectedBatchAvgWeight = $batch->average_weight_per_bird;
+        $this->selectedBatchBuyPrice = $batch->effective_buy_price_per_kg;
+        $this->selectedBatchRemaining = (string) ((int) ($batch->remaining_bird_count ?? round($batch->remaining_weight_kg / max(0.1, $batch->average_weight_per_bird))));
         $this->resetErrorBag();
     }
 
@@ -49,34 +58,34 @@ class Index extends Component
     public function saveRemaining(ProductionService $productionService): void
     {
         $this->validate([
-            'selectedBatchRemaining' => 'required|numeric|min:0',
+            'selectedBatchRemaining' => 'required|integer|min:0',
         ], [
             'selectedBatchRemaining.required' => 'Sisa ayam wajib diisi.',
-            'selectedBatchRemaining.numeric' => 'Sisa ayam harus berupa angka valid.',
+            'selectedBatchRemaining.integer' => 'Sisa ayam harus berupa angka bulat ekor.',
             'selectedBatchRemaining.min' => 'Sisa ayam tidak boleh bernilai negatif.',
         ]);
 
         $batch = ProductionBatch::findOrFail($this->selectedBatchId);
-        $weight = (float) $this->selectedBatchRemaining;
-        $productionService->updateRemaining($batch, $weight);
+        $birds = (int) $this->selectedBatchRemaining;
+        $productionService->updateRemaining($batch, null, $birds);
 
-        session()->flash('success', "Sisa ayam batch {$batch->batch_number} berhasil diperbarui menjadi {$weight} kg.");
+        session()->flash('success', "Sisa ayam batch {$batch->batch_number} berhasil diperbarui menjadi {$birds} ekor.");
         $this->closeUpdateRemaining();
     }
 
     public function updateRemaining(int $batchId, ProductionService $productionService): void
     {
-        $weight = isset($this->remainingInputs[$batchId]) ? (float) $this->remainingInputs[$batchId] : null;
-        if ($weight === null || $weight < 0) {
-            session()->flash('error', 'Kuantitas sisa ayam (kg) harus angka valid lebih besar atau sama dengan 0.');
+        $birds = isset($this->remainingInputs[$batchId]) ? (int) $this->remainingInputs[$batchId] : null;
+        if ($birds === null || $birds < 0) {
+            session()->flash('error', 'Kuantitas sisa ayam (ekor) harus angka bulat lebih besar atau sama dengan 0.');
 
             return;
         }
 
         $batch = ProductionBatch::findOrFail($batchId);
-        $productionService->updateRemaining($batch, $weight);
+        $productionService->updateRemaining($batch, null, $birds);
 
-        session()->flash('success', "Sisa ayam batch {$batch->batch_number} berhasil diperbarui menjadi {$weight} kg.");
+        session()->flash('success', "Sisa ayam batch {$batch->batch_number} berhasil diperbarui menjadi {$birds} ekor.");
     }
 
     public function deleteBatch(int $batchId, ProductionService $productionService): void
@@ -104,7 +113,7 @@ class Index extends Component
 
         foreach ($batches as $b) {
             if (! isset($this->remainingInputs[$b->id])) {
-                $this->remainingInputs[$b->id] = (string) ((float) $b->remaining_weight_kg);
+                $this->remainingInputs[$b->id] = (string) ((int) ($b->remaining_bird_count ?? round($b->remaining_weight_kg / max(0.1, $b->average_weight_per_bird))));
             }
         }
 
