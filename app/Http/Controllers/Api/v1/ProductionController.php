@@ -58,6 +58,7 @@ class ProductionController extends Controller
             'total_cost' => 'nullable|numeric|min:0',
             'remaining_weight_kg' => 'nullable|numeric|min:0',
             'live_bird_count' => 'nullable|integer|min:0',
+            'average_weight_per_bird' => 'nullable|numeric|min:0',
             'additional_cost' => 'nullable|numeric|min:0',
             'notes' => 'nullable|string',
         ]);
@@ -85,12 +86,18 @@ class ProductionController extends Controller
             'remaining_birds' => 'nullable|integer|min:0',
             'remaining_bird_count' => 'nullable|integer|min:0',
             'remaining_weight_kg' => 'nullable|numeric|min:0',
+            'dead_birds' => 'nullable|integer|min:0',
+            'dead_bird_count' => 'nullable|integer|min:0',
+            'dead_weight_kg' => 'nullable|numeric|min:0',
         ]);
 
         $birds = isset($validated['remaining_birds']) ? (int) $validated['remaining_birds'] : (isset($validated['remaining_bird_count']) ? (int) $validated['remaining_bird_count'] : null);
         $weight = isset($validated['remaining_weight_kg']) ? (float) $validated['remaining_weight_kg'] : null;
 
-        $batch = $this->productionService->updateRemaining($batch, $weight, $birds);
+        $deadBirds = isset($validated['dead_birds']) ? (int) $validated['dead_birds'] : (isset($validated['dead_bird_count']) ? (int) $validated['dead_bird_count'] : null);
+        $deadWeight = isset($validated['dead_weight_kg']) ? (float) $validated['dead_weight_kg'] : null;
+
+        $batch = $this->productionService->updateRemaining($batch, $weight, $birds, $deadBirds, $deadWeight);
         $batch->pos_summary = $batch->getPosSummary();
         $batch->effective_buy_price_per_kg = $batch->effective_buy_price_per_kg;
 

@@ -37,8 +37,8 @@
                 </div>
             </div>
 
-            <!-- Baris 2: Jumlah Kilo & Total Modal Beli (Harga per kg dihitung otomatis oleh sistem) -->
-            <div class="grid gap-5 sm:grid-cols-2">
+            <!-- Baris 2: Jumlah Kilo, Total Modal Beli, & Berat Rata-rata per Ekor -->
+            <div class="grid gap-5 sm:grid-cols-3">
                 <div>
                     <label for="live_weight_kg" class="block text-xs font-semibold text-slate-700 mb-1.5">
                         Jumlah kilo ayam hidup (kg) *
@@ -47,7 +47,7 @@
                         <input id="live_weight_kg" wire:model.live.debounce.300ms="live_weight_kg" type="number" step="0.01" class="w-full border-0 bg-transparent p-0 text-sm font-semibold text-brand-primary placeholder:font-normal placeholder:text-slate-400 outline-none focus:outline-none focus:ring-0" placeholder="Contoh: 100" required>
                         <span class="ml-2 text-xs font-bold text-slate-400">kg</span>
                     </div>
-                    <span class="mt-1 block text-[11px] leading-4 text-brand-textGray">Total timbangan kilo kotor saat ayam hidup tiba dari supplier.</span>
+                    <span class="mt-1 block text-[11px] leading-4 text-brand-textGray">Total timbangan kilo kotor saat ayam hidup tiba.</span>
                     @error('live_weight_kg') <span class="mt-1 block text-xs text-red-600">{{ $message }}</span> @enderror
                 </div>
 
@@ -59,8 +59,20 @@
                         <span class="mr-2 text-xs font-bold text-slate-500">Rp</span>
                         <input id="total_cost" wire:model.live.debounce.300ms="total_cost" type="number" step="1000" class="w-full border-0 bg-transparent p-0 text-sm font-semibold text-brand-primary placeholder:font-normal placeholder:text-slate-400 outline-none focus:outline-none focus:ring-0" placeholder="Contoh: 2200000" required>
                     </div>
-                    <span class="mt-1 block text-[11px] leading-4 text-brand-textGray">Total uang yang dikeluarkan untuk membeli batch ayam ini.</span>
+                    <span class="mt-1 block text-[11px] leading-4 text-brand-textGray">Total uang yang dikeluarkan untuk membeli batch ini.</span>
                     @error('total_cost') <span class="mt-1 block text-xs text-red-600">{{ $message }}</span> @enderror
+                </div>
+
+                <div>
+                    <label for="average_weight_per_bird" class="block text-xs font-semibold text-slate-700 mb-1.5">
+                        Berat rata-rata / ekor (kg) <span class="text-slate-400 font-normal">(Opsional)</span>
+                    </label>
+                    <div class="relative flex items-center rounded-lg border border-slate-300 bg-white px-3 py-2 shadow-sm transition focus-within:border-brand-primary focus-within:ring-2 focus-within:ring-brand-primary/20">
+                        <input id="average_weight_per_bird" wire:model.live.debounce.300ms="average_weight_per_bird" type="number" step="0.01" min="0" class="w-full border-0 bg-transparent p-0 text-sm font-semibold text-brand-primary placeholder:font-normal placeholder:text-slate-400 outline-none focus:outline-none focus:ring-0" placeholder="Contoh: 1.8 (Opsional)">
+                        <span class="ml-2 text-xs font-bold text-slate-400">kg/ekor</span>
+                    </div>
+                    <span class="mt-1 block text-[11px] leading-4 text-brand-textGray">Untuk estimasi kg sisa & ayam mati. Kosongkan jika tanpa estimasi.</span>
+                    @error('average_weight_per_bird') <span class="mt-1 block text-xs text-red-600">{{ $message }}</span> @enderror
                 </div>
             </div>
 
@@ -74,9 +86,16 @@
                             <span class="text-sm font-normal text-slate-600">/ kg</span>
                         </p>
                     </div>
-                    <div class="rounded-lg bg-blue-100 px-3 py-1.5 text-xs font-bold text-brand-primary">
-                        Dihitung Otomatis
-                    </div>
+                    @if((float) $average_weight_per_bird > 0 && (float) $live_weight_kg > 0)
+                        <div class="rounded-lg bg-blue-100 px-3 py-1.5 text-xs font-bold text-brand-primary text-right">
+                            <span>Estimasi: ± {{ (int) round((float) $live_weight_kg / (float) $average_weight_per_bird) }} ekor</span>
+                            <span class="block text-[10px] font-normal text-slate-500">({{ number_format((float) $average_weight_per_bird, 2, ',', '.') }} kg/ekor)</span>
+                        </div>
+                    @else
+                        <div class="rounded-lg bg-blue-100 px-3 py-1.5 text-xs font-bold text-brand-primary">
+                            Dihitung Otomatis
+                        </div>
+                    @endif
                 </div>
                 <p class="mt-2 text-brand-textGray">
                     Rumus: Total Modal (Rp {{ number_format((float) $total_cost, 0, ',', '.') }}) ÷ Kilo Ayam ({{ (float) $live_weight_kg > 0 ? number_format((float) $live_weight_kg, 2, ',', '.') : '0' }} kg)

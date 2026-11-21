@@ -31,11 +31,13 @@ class Index extends Component
 
     public int $selectedBatchLiveBirdCount = 0;
 
-    public float $selectedBatchAvgWeight = 2.0;
+    public ?float $selectedBatchAvgWeight = null;
 
     public float $selectedBatchBuyPrice = 0;
 
     public string $selectedBatchRemaining = '0';
+
+    public string $selectedBatchDead = '0';
 
     public function openUpdateRemaining(int $batchId): void
     {
@@ -46,7 +48,8 @@ class Index extends Component
         $this->selectedBatchLiveBirdCount = (int) ($batch->live_bird_count ?? 0);
         $this->selectedBatchAvgWeight = $batch->average_weight_per_bird;
         $this->selectedBatchBuyPrice = $batch->effective_buy_price_per_kg;
-        $this->selectedBatchRemaining = (string) ((int) ($batch->remaining_bird_count ?? round($batch->remaining_weight_kg / max(0.1, $batch->average_weight_per_bird))));
+        $this->selectedBatchRemaining = (string) ((int) ($batch->remaining_bird_count ?? 0));
+        $this->selectedBatchDead = (string) ((int) ($batch->dead_bird_count ?? 0));
         $this->resetErrorBag();
     }
 
@@ -59,17 +62,21 @@ class Index extends Component
     {
         $this->validate([
             'selectedBatchRemaining' => 'required|integer|min:0',
+            'selectedBatchDead' => 'nullable|integer|min:0',
         ], [
-            'selectedBatchRemaining.required' => 'Sisa ayam wajib diisi.',
-            'selectedBatchRemaining.integer' => 'Sisa ayam harus berupa angka bulat ekor.',
-            'selectedBatchRemaining.min' => 'Sisa ayam tidak boleh bernilai negatif.',
+            'selectedBatchRemaining.required' => 'Sisa ayam hidup wajib diisi.',
+            'selectedBatchRemaining.integer' => 'Sisa ayam hidup harus berupa angka bulat ekor.',
+            'selectedBatchRemaining.min' => 'Sisa ayam hidup tidak boleh bernilai negatif.',
+            'selectedBatchDead.integer' => 'Ayam mati harus berupa angka bulat ekor.',
+            'selectedBatchDead.min' => 'Ayam mati tidak boleh bernilai negatif.',
         ]);
 
         $batch = ProductionBatch::findOrFail($this->selectedBatchId);
-        $birds = (int) $this->selectedBatchRemaining;
-        $productionService->updateRemaining($batch, null, $birds);
+        $remainingBirds = (int) $this->selectedBatchRemaining;
+        $deadBirds = (int) ($this->selectedBatchDead ?: 0);
+        $productionService->updateRemaining($batch, null, $remainingBirds, $deadBirds);
 
-        session()->flash('success', "Sisa ayam batch {$batch->batch_number} berhasil diperbarui menjadi {$birds} ekor.");
+        session()->flash('success', "Batch {$batch->batch_number} berhasil diperbarui (Sisa: {$remainingBirds} ekor, Mati: {$deadBirds} ekor).");
         $this->closeUpdateRemaining();
     }
 

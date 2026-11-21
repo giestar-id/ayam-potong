@@ -28,50 +28,84 @@
                             <span class="text-brand-textGray">Beli awal:</span>
                             <span class="font-semibold">{{ number_format($selectedBatchLiveWeight, 1, ',', '.') }} kg ({{ $selectedBatchLiveBirdCount > 0 ? $selectedBatchLiveBirdCount . ' ekor' : 'Tanpa hitung ekor' }})</span>
                         </div>
+                        @if($selectedBatchAvgWeight && $selectedBatchAvgWeight > 0)
                         <div class="flex justify-between">
                             <span class="text-brand-textGray">Rata-rata bobot:</span>
                             <span class="font-semibold text-brand-primary">± {{ number_format($selectedBatchAvgWeight, 2, ',', '.') }} kg / ekor</span>
                         </div>
+                        @endif
                     </div>
 
-                    <div class="form-group mb-0">
-                        <label for="modal_remaining_birds" class="form-label text-xs">Sisa ayam (ekor) <span class="text-red-500">*</span></label>
-                        <div class="relative">
-                            <input
-                                type="number"
-                                step="1"
-                                min="0"
-                                id="modal_remaining_birds"
-                                wire:model.live="selectedBatchRemaining"
-                                class="form-input text-sm @error('selectedBatchRemaining') border-red-500 @enderror"
-                                placeholder="0"
-                                required
-                                autofocus
-                            />
-                            <span class="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-brand-textGray font-semibold">ekor</span>
+                    <div class="grid gap-3 sm:grid-cols-2">
+                        <div class="form-group mb-0">
+                            <label for="modal_remaining_birds" class="form-label text-xs">Sisa ayam hidup (ekor) <span class="text-red-500">*</span></label>
+                            <div class="relative">
+                                <input
+                                    type="number"
+                                    step="1"
+                                    min="0"
+                                    id="modal_remaining_birds"
+                                    wire:model.live="selectedBatchRemaining"
+                                    class="form-input text-sm @error('selectedBatchRemaining') border-red-500 @enderror"
+                                    placeholder="0"
+                                    required
+                                    autofocus
+                                />
+                                <span class="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-brand-textGray font-semibold">ekor</span>
+                            </div>
+                            @error('selectedBatchRemaining')
+                                <p class="text-xs text-red-500 mt-1">{{ $message }}</p>
+                            @enderror
                         </div>
-                        @error('selectedBatchRemaining')
-                            <p class="text-xs text-red-500 mt-1">{{ $message }}</p>
-                        @enderror
+
+                        <div class="form-group mb-0">
+                            <label for="modal_dead_birds" class="form-label text-xs">Ayam mati (ekor) <span class="text-slate-400 font-normal">(Opsional)</span></label>
+                            <div class="relative">
+                                <input
+                                    type="number"
+                                    step="1"
+                                    min="0"
+                                    id="modal_dead_birds"
+                                    wire:model.live="selectedBatchDead"
+                                    class="form-input text-sm @error('selectedBatchDead') border-red-500 @enderror"
+                                    placeholder="0"
+                                />
+                                <span class="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-red-500 font-semibold">ekor</span>
+                            </div>
+                            @error('selectedBatchDead')
+                                <p class="text-xs text-red-500 mt-1">{{ $message }}</p>
+                            @enderror
+                        </div>
                     </div>
 
-                    @php
-                        $inputBirds = max(0, (int) ($selectedBatchRemaining ?: 0));
-                        $estKg = round($inputBirds * $selectedBatchAvgWeight, 2);
-                        $estCost = round($estKg * $selectedBatchBuyPrice, 2);
-                    @endphp
-                    <div class="rounded-lg bg-blue-50/70 p-2.5 border border-blue-100 text-[11px] space-y-1">
-                        <div class="flex items-center gap-1.5 font-semibold text-brand-primary">
-                            <x-icon name="box" class="h-3.5 w-3.5"/>
-                            <span>Estimasi Konversi:</span>
+                    @if($selectedBatchAvgWeight && $selectedBatchAvgWeight > 0)
+                        @php
+                            $inputBirds = max(0, (int) ($selectedBatchRemaining ?: 0));
+                            $estKg = round($inputBirds * $selectedBatchAvgWeight, 2);
+                            $estCost = $selectedBatchBuyPrice > 0 ? round($estKg * $selectedBatchBuyPrice, 2) : null;
+
+                            $deadBirds = max(0, (int) ($selectedBatchDead ?: 0));
+                            $deadKg = round($deadBirds * $selectedBatchAvgWeight, 2);
+                            $deadCost = ($selectedBatchBuyPrice > 0 && $deadKg > 0) ? round($deadKg * $selectedBatchBuyPrice, 2) : null;
+                        @endphp
+                        <div class="rounded-lg bg-blue-50/70 p-2.5 border border-blue-100 text-[11px] space-y-1.5">
+                            <div class="flex items-center gap-1.5 font-semibold text-brand-primary">
+                                <x-icon name="box" class="h-3.5 w-3.5"/>
+                                <span>Estimasi Konversi:</span>
+                            </div>
+                            <p class="font-medium text-brand-textDark">
+                                • Sisa Hidup: ± {{ number_format($estKg, 1, ',', '.') }} kg @if($estCost !== null) · Nilai modal: Rp {{ number_format($estCost, 0, ',', '.') }} @endif
+                            </p>
+                            @if($deadBirds > 0)
+                            <p class="font-medium text-red-600">
+                                • Ayam Mati: ± {{ number_format($deadKg, 1, ',', '.') }} kg @if($deadCost !== null) · Rugi modal: Rp {{ number_format($deadCost, 0, ',', '.') }} @else · Rugi modal: - @endif
+                            </p>
+                            @endif
+                            <p class="text-[10px] text-slate-500 pt-1 border-t border-blue-100">
+                                * Catatan: Bobot kilogram di atas merupakan estimasi berdasarkan rata-rata bobot ({{ number_format($selectedBatchAvgWeight, 2, ',', '.') }} kg/ekor), bukan hasil timbangan pasti.
+                            </p>
                         </div>
-                        <p class="font-medium text-brand-textDark">
-                            Setara ± {{ number_format($estKg, 1, ',', '.') }} kg · Nilai modal: Rp {{ number_format($estCost, 0, ',', '.') }}
-                        </p>
-                        <p class="text-[10px] text-slate-500 pt-1 border-t border-blue-100">
-                            * Catatan: Bobot kilogram di atas merupakan estimasi berdasarkan rata-rata bobot batch ayam datang, bukan hasil timbangan pasti.
-                        </p>
-                    </div>
+                    @endif
 
                     <div class="flex items-center justify-end gap-2 pt-2 border-t border-brand-border">
                         <button type="button" wire:click="closeUpdateRemaining" class="btn text-xs py-1.5 px-3">

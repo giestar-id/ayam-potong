@@ -19,6 +19,8 @@ class Show extends Component
 
     public string $remaining_birds = '0';
 
+    public string $dead_birds = '0';
+
     public string $remaining_weight_kg = '0';
 
     public string $additional_cost = '0';
@@ -32,7 +34,8 @@ class Show extends Component
     {
         $batch = ProductionBatch::with(['outputs.product'])->findOrFail($id);
         $this->batchId = $batch->id;
-        $this->remaining_birds = (string) ((int) ($batch->remaining_bird_count ?? round($batch->remaining_weight_kg / max(0.1, $batch->average_weight_per_bird))));
+        $this->remaining_birds = (string) ((int) ($batch->remaining_bird_count ?? 0));
+        $this->dead_birds = (string) ((int) ($batch->dead_bird_count ?? 0));
         $this->remaining_weight_kg = (string) ((float) $batch->remaining_weight_kg);
         $this->additional_cost = (string) $batch->additional_cost;
         $this->notes = (string) ($batch->notes ?? '');
@@ -54,17 +57,18 @@ class Show extends Component
     public function updateRemaining(ProductionService $productionService): void
     {
         $birds = (int) $this->remaining_birds;
-        if ($birds < 0) {
-            session()->flash('error', 'Kuantitas sisa ayam (ekor) harus angka bulat lebih besar atau sama dengan 0.');
+        $dead = (int) ($this->dead_birds ?: 0);
+        if ($birds < 0 || $dead < 0) {
+            session()->flash('error', 'Kuantitas ekor ayam harus angka bulat lebih besar atau sama dengan 0.');
 
             return;
         }
 
         $batch = ProductionBatch::findOrFail($this->batchId);
-        $productionService->updateRemaining($batch, null, $birds);
+        $productionService->updateRemaining($batch, null, $birds, $dead);
         $this->remaining_weight_kg = (string) ((float) $batch->fresh()->remaining_weight_kg);
 
-        session()->flash('success', "Sisa ayam berhasil diperbarui menjadi {$birds} ekor. Perhitungan susut dan keuntungan otomatis diperbarui.");
+        session()->flash('success', "Data sisa & ayam mati berhasil diperbarui (Sisa: {$birds} ekor, Mati: {$dead} ekor). Perhitungan susut dan keuntungan otomatis diperbarui.");
     }
 
     public function updateAdditionalCost(ProductionService $productionService): void

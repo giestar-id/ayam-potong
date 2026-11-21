@@ -96,6 +96,7 @@ class ProductionYieldAndStockTest extends TestCase
             ->assertSet('selectedBatchId', $batch->id)
             ->assertSet('selectedBatchNumber', $batch->batch_number)
             ->set('selectedBatchRemaining', '20')
+            ->set('selectedBatchDead', '5')
             ->call('saveRemaining')
             ->assertSet('selectedBatchId', null)
             ->assertHasNoErrors();
@@ -103,7 +104,10 @@ class ProductionYieldAndStockTest extends TestCase
         $batch->refresh();
         $this->assertEquals(20, (int) $batch->remaining_bird_count);
         $this->assertEquals(40.0, (float) $batch->remaining_weight_kg);
-        $this->assertEquals(260.0, (float) $batch->used_weight_kg);
+        $this->assertEquals(5, (int) $batch->dead_bird_count);
+        $this->assertEquals(10.0, (float) $batch->dead_weight_kg);
+        $this->assertEquals(240000.0, (float) $batch->dead_cost);
+        $this->assertEquals(250.0, (float) $batch->used_weight_kg); // 300 - 40 - 10 = 250
     }
 
     public function test_production_form_creates_batch_with_total_cost_and_auto_calculates_price_per_kg(): void
@@ -116,6 +120,7 @@ class ProductionYieldAndStockTest extends TestCase
             ->set('production_date', now()->toDateString())
             ->set('live_weight_kg', '200')
             ->set('total_cost', '4800000')
+            ->set('average_weight_per_bird', '1.8')
             ->assertSet('calculatedBuyPricePerKg', 24000.0)
             ->call('save')
             ->assertHasNoErrors()
@@ -126,6 +131,7 @@ class ProductionYieldAndStockTest extends TestCase
             'live_weight_kg' => 200.0,
             'raw_material_cost' => 4800000.0,
             'buy_price_per_kg' => 24000.0,
+            'average_weight_per_bird' => 1.8,
         ]);
     }
 }

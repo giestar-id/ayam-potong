@@ -20,6 +20,8 @@ class Form extends Component
 
     public string $buy_price_per_kg = '';
 
+    public string $average_weight_per_bird = '';
+
     public string $notes = '';
 
     public function mount(ProductionService $productionService): void
@@ -76,17 +78,20 @@ class Form extends Component
             'production_date' => 'nullable|date',
             'live_weight_kg' => 'required|numeric|gt:0',
             'total_cost' => 'required|numeric|gt:0',
+            'average_weight_per_bird' => 'nullable|numeric|gt:0',
             'notes' => 'nullable|string',
         ], [
             'live_weight_kg.required' => 'Jumlah kilo ayam wajib diisi.',
             'live_weight_kg.gt' => 'Jumlah kilo ayam harus lebih besar dari 0 kg.',
             'total_cost.required' => 'Total modal pembelian ayam wajib diisi.',
             'total_cost.gt' => 'Total modal pembelian ayam harus lebih besar dari Rp 0.',
+            'average_weight_per_bird.gt' => 'Berat rata-rata per ekor harus lebih besar dari 0 kg.',
         ]);
 
         $weight = (float) $this->live_weight_kg;
         $total = (float) $this->total_cost;
         $pricePerKg = round($total / $weight, 2);
+        $avgWeight = (float) $this->average_weight_per_bird > 0 ? (float) $this->average_weight_per_bird : null;
 
         $customBatchNumber = trim($this->batch_number) !== '' ? trim($this->batch_number) : null;
 
@@ -95,6 +100,7 @@ class Form extends Component
             'production_date' => $this->production_date,
             'live_weight_kg' => $weight,
             'buy_price_per_kg' => $pricePerKg,
+            'average_weight_per_bird' => $avgWeight,
             'raw_material_cost' => $total,
             'notes' => $this->notes ?: null,
         ]);

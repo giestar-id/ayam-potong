@@ -70,6 +70,7 @@ class ProductionService
             'status' => 'active',
             'live_weight_kg' => $liveWeight,
             'buy_price_per_kg' => $buyPrice,
+            'average_weight_per_bird' => isset($data['average_weight_per_bird']) && (float) $data['average_weight_per_bird'] > 0 ? (float) $data['average_weight_per_bird'] : null,
             'remaining_weight_kg' => $remainingWeight,
             'live_bird_count' => $data['live_bird_count'] ?? null,
             'raw_material_cost' => $rawCost,
@@ -82,24 +83,73 @@ class ProductionService
         return $batch;
     }
 
-    public function updateRemaining(ProductionBatch $batch, ?float $remainingWeight = null, ?int $remainingBirds = null): ProductionBatch
-    {
+    public function updateRemaining(
+        ProductionBatch $batch,
+        ?float $remainingWeight = null,
+        ?int $remainingBirds = null,
+        ?int $deadBirds = null,
+        ?float $deadWeight = null
+    ): ProductionBatch {
         $avgWeight = $batch->average_weight_per_bird;
+        $buyPrice = $batch->effective_buy_price_per_kg;
 
-        if ($remainingBirds !== null) {
-            $remainingBirds = max(0, $remainingBirds);
-            $remainingWeight = round($remainingBirds * $avgWeight, 2);
-        } elseif ($remainingWeight !== null) {
-            $remainingWeight = max(0.0, round($remainingWeight, 2));
-            $remainingBirds = (int) round($remainingWeight / max(0.1, $avgWeight));
+        if ($avgWeight !== null && $avgWeight > 0) {
+            if ($remainingBirds !== null) {
+                $remainingBirds = max(0, $remainingBirds);
+                $remainingWeight = round($remainingBirds * $avgWeight, 2);
+            } elseif ($remainingWeight !== null) {
+                $remainingWeight = max(0.0, round($remainingWeight, 2));
+                $remainingBirds = (int) round($remainingWeight / $avgWeight);
+            } else {
+                $remainingBirds = $batch->remaining_bird_count ?? 0;
+                $remainingWeight = (float) ($batch->remaining_weight_kg ?? 0.0);
+            }
+
+            if ($deadBirds !== null) {
+                $deadBirds = max(0, $deadBirds);
+                $deadWeight = round($deadBirds * $avgWeight, 2);
+            } elseif ($deadWeight !== null) {
+                $deadWeight = max(0.0, round($deadWeight, 2));
+                $deadBirds = (int) round($deadWeight / $avgWeight);
+            } else {
+                $deadBirds = $batch->dead_bird_count ?? 0;
+                $deadWeight = (float) ($batch->dead_weight_kg ?? 0.0);
+            }
+
+            $deadCost = ($buyPrice > 0 && $deadWeight > 0) ? round($deadWeight * $buyPrice, 2) : 0.0;
         } else {
-            $remainingBirds = 0;
-            $remainingWeight = 0.0;
+            // Owner did not input average weight per bird
+            if ($remainingBirds !== null) {
+                $remainingBirds = max(0, $remainingBirds);
+                $remainingWeight = $remainingWeight !== null ? max(0.0, round($remainingWeight, 2)) : 0.0;
+            } elseif ($remainingWeight !== null) {
+                $remainingWeight = max(0.0, round($remainingWeight, 2));
+                $remainingBirds = $batch->remaining_bird_count ?? 0;
+            } else {
+                $remainingBirds = $batch->remaining_bird_count ?? 0;
+                $remainingWeight = (float) ($batch->remaining_weight_kg ?? 0.0);
+            }
+
+            if ($deadBirds !== null) {
+                $deadBirds = max(0, $deadBirds);
+                $deadWeight = $deadWeight !== null ? max(0.0, round($deadWeight, 2)) : 0.0;
+            } elseif ($deadWeight !== null) {
+                $deadWeight = max(0.0, round($deadWeight, 2));
+                $deadBirds = $batch->dead_bird_count ?? 0;
+            } else {
+                $deadBirds = $batch->dead_bird_count ?? 0;
+                $deadWeight = (float) ($batch->dead_weight_kg ?? 0.0);
+            }
+
+            $deadCost = 0.0;
         }
 
         $batch->update([
             'remaining_bird_count' => $remainingBirds,
             'remaining_weight_kg' => $remainingWeight,
+            'dead_bird_count' => $deadBirds,
+            'dead_weight_kg' => $deadWeight,
+            'dead_cost' => $deadCost,
         ]);
 
         $this->invalidateCache();

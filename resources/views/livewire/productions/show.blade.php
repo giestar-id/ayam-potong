@@ -40,13 +40,23 @@
             </div>
         </div>
 
-        <!-- Card 2: Sisa Ayam -->
+        <!-- Card 2: Sisa Ayam & Mati -->
         <div class="panel p-5 min-w-0 overflow-hidden flex flex-col justify-between">
-            <span class="text-xs font-semibold text-brand-textDark truncate">Sisa Ayam</span>
+            <span class="text-xs font-semibold text-brand-textDark truncate">Sisa & Mati</span>
             <div class="my-2">
                 <p class="card-fit-value text-brand-textDark font-bold" title="Rp {{ number_format($posSummary['remaining_cost'], 0, ',', '.') }}">Rp {{ number_format($posSummary['remaining_cost'], 0, ',', '.') }}</p>
-                <p class="text-xs font-medium text-brand-textGray mt-0.5 truncate" title="{{ (int) ($batch->remaining_bird_count ?? round($batch->remaining_weight_kg / max(0.1, $batch->average_weight_per_bird))) }} ekor (±{{ number_format($batch->remaining_weight_kg, 1, ',', '.') }} kg)">
-                    {{ (int) ($batch->remaining_bird_count ?? round($batch->remaining_weight_kg / max(0.1, $batch->average_weight_per_bird))) }} ekor (±{{ number_format($batch->remaining_weight_kg, 1, ',', '.') }} kg)
+                <p class="text-xs font-medium text-brand-textGray mt-0.5 truncate">
+                    @if($batch->average_weight_per_bird && $batch->average_weight_per_bird > 0)
+                        Sisa: {{ (int) ($batch->remaining_bird_count ?? 0) }} ekor (±{{ number_format($batch->remaining_weight_kg, 1, ',', '.') }} kg)
+                        @if((int) ($batch->dead_bird_count ?? 0) > 0)
+                            · <span class="text-red-500 font-semibold">Mati: {{ (int) $batch->dead_bird_count }} ekor</span>
+                        @endif
+                    @else
+                        Sisa: {{ (int) ($batch->remaining_bird_count ?? 0) }} ekor
+                        @if((int) ($batch->dead_bird_count ?? 0) > 0)
+                            · <span class="text-red-500 font-semibold">Mati: {{ (int) $batch->dead_bird_count }} ekor</span>
+                        @endif
+                    @endif
                 </p>
             </div>
         </div>
@@ -150,38 +160,59 @@
         </section>
     </div>
 
-    <!-- Section Form Update Sisa Ayam (Simpel, Bersih, Tanpa Tabel Ribet) -->
+    <!-- Section Form Update Sisa Ayam & Ayam Mati -->
     <section class="panel p-6 bg-[#fbfcfe] border border-blue-200 max-w-xl">
-        <h2 class="text-sm font-bold text-brand-primary">Update Sisa Ayam</h2>
+        <h2 class="text-sm font-bold text-brand-primary">Update Sisa & Ayam Mati</h2>
         <form wire:submit="updateRemaining" class="mt-4 space-y-4">
-            <label class="field">
-                Sisa ayam (ekor) *
-                <div class="flex items-center gap-2">
-                    <input wire:model.live="remaining_birds" type="number" step="1" min="0" class="input font-bold text-base text-brand-primary" placeholder="0" required>
-                    <span class="text-sm font-semibold text-brand-textGray">ekor</span>
-                </div>
-            </label>
+            <div class="grid gap-4 sm:grid-cols-2">
+                <label class="field">
+                    Sisa ayam hidup (ekor) *
+                    <div class="flex items-center gap-2">
+                        <input wire:model.live="remaining_birds" type="number" step="1" min="0" class="input font-bold text-base text-brand-primary" placeholder="0" required>
+                        <span class="text-sm font-semibold text-brand-textGray">ekor</span>
+                    </div>
+                </label>
 
-            @php
-                $inputBirds = max(0, (int) ($remaining_birds ?: 0));
-                $estKg = round($inputBirds * $batch->average_weight_per_bird, 2);
-                $estCost = round($estKg * $batch->effective_buy_price_per_kg, 2);
-            @endphp
-            <div class="rounded-lg bg-blue-50/70 p-3 border border-blue-100 text-xs space-y-1">
-                <div class="flex items-center gap-1.5 font-semibold text-brand-primary">
-                    <x-icon name="box" class="h-4 w-4"/>
-                    <span>Estimasi Konversi:</span>
-                </div>
-                <p class="font-medium text-brand-textDark">
-                    Setara ± {{ number_format($estKg, 1, ',', '.') }} kg · Nilai modal: Rp {{ number_format($estCost, 0, ',', '.') }}
-                </p>
-                <p class="text-[11px] text-slate-500 pt-1 border-t border-blue-100">
-                    * Catatan: Angka kilogram di atas merupakan estimasi berdasarkan rata-rata bobot per ekor saat batch datang ({{ number_format($batch->average_weight_per_bird, 2, ',', '.') }} kg/ekor), bukan hasil timbangan pasti.
-                </p>
+                <label class="field">
+                    Ayam mati (ekor) <span class="text-slate-400 font-normal">(Opsional)</span>
+                    <div class="flex items-center gap-2">
+                        <input wire:model.live="dead_birds" type="number" step="1" min="0" class="input font-bold text-base text-red-600" placeholder="0">
+                        <span class="text-sm font-semibold text-red-500">ekor</span>
+                    </div>
+                </label>
             </div>
 
+            @if($batch->average_weight_per_bird && $batch->average_weight_per_bird > 0)
+                @php
+                    $inputBirds = max(0, (int) ($remaining_birds ?: 0));
+                    $estKg = round($inputBirds * $batch->average_weight_per_bird, 2);
+                    $estCost = $batch->effective_buy_price_per_kg > 0 ? round($estKg * $batch->effective_buy_price_per_kg, 2) : null;
+
+                    $inputDead = max(0, (int) ($dead_birds ?: 0));
+                    $deadKg = round($inputDead * $batch->average_weight_per_bird, 2);
+                    $deadCost = ($batch->effective_buy_price_per_kg > 0 && $deadKg > 0) ? round($deadKg * $batch->effective_buy_price_per_kg, 2) : null;
+                @endphp
+                <div class="rounded-lg bg-blue-50/70 p-3 border border-blue-100 text-xs space-y-1.5">
+                    <div class="flex items-center gap-1.5 font-semibold text-brand-primary">
+                        <x-icon name="box" class="h-4 w-4"/>
+                        <span>Estimasi Konversi:</span>
+                    </div>
+                    <p class="font-medium text-brand-textDark">
+                        • Sisa Hidup: ± {{ number_format($estKg, 1, ',', '.') }} kg @if($estCost !== null) · Nilai modal: Rp {{ number_format($estCost, 0, ',', '.') }} @endif
+                    </p>
+                    @if($inputDead > 0)
+                    <p class="font-medium text-red-600">
+                        • Ayam Mati: ± {{ number_format($deadKg, 1, ',', '.') }} kg @if($deadCost !== null) · Rugi modal: Rp {{ number_format($deadCost, 0, ',', '.') }} @else · Rugi modal: - @endif
+                    </p>
+                    @endif
+                    <p class="text-[11px] text-slate-500 pt-1 border-t border-blue-100">
+                        * Catatan: Angka kilogram di atas merupakan estimasi berdasarkan rata-rata bobot per ekor saat batch datang ({{ number_format($batch->average_weight_per_bird, 2, ',', '.') }} kg/ekor), bukan hasil timbangan pasti.
+                    </p>
+                </div>
+            @endif
+
             <button type="submit" class="btn btn-primary" wire:loading.attr="disabled">
-                <x-icon name="check"/>Simpan Sisa Ayam
+                <x-icon name="check"/>Simpan Perubahan
             </button>
         </form>
     </section>
