@@ -75,9 +75,11 @@
                                         <button type="button" wire:click="edit({{ $c->id }})" class="btn text-xs py-1 px-2.5">
                                             Edit
                                         </button>
-                                        <button type="button" wire:click="delete({{ $c->id }})" wire:confirm="Hapus pelanggan ini?" class="btn btn-danger text-xs py-1 px-2.5">
-                                            Hapus
-                                        </button>
+                                        @if(auth()->user()?->isOwner())
+                                            <button type="button" wire:click="delete({{ $c->id }})" wire:confirm="Hapus pelanggan ini?" class="btn btn-danger text-xs py-1 px-2.5">
+                                                Hapus
+                                            </button>
+                                        @endif
                                     </div>
                                 </td>
                             </tr>

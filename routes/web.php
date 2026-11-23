@@ -55,11 +55,11 @@ Route::middleware(['auth', 'auth.session', EnsureActiveUser::class])->group(func
     Route::get('/products', ProductIndex::class)->name('products.index');
     Route::get('/products/form/{id?}', ProductForm::class)->name('products.form');
 
+    // Pelanggan (Bisa diakses Owner & Pegawai)
+    Route::get('/customers', CustomerIndex::class)->name('customers.index');
+
     // Khusus Owner (Diproteksi EnsureOwner)
     Route::middleware(EnsureOwner::class)->group(function () {
-        // Pelanggan
-        Route::get('/customers', CustomerIndex::class)->name('customers.index');
-
         // Tim Pegawai & Penggajian
         Route::get('/employees', EmployeeIndex::class)->name('employees.index');
         Route::get('/payrolls', PayrollIndex::class)->name('payrolls.index');

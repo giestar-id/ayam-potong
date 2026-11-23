@@ -38,7 +38,7 @@ class Index extends Component
 
     public function mount(): void
     {
-        $this->authorize('owner');
+        // Dapat diakses oleh Owner dan Pegawai
     }
 
     public function updatedSearch(): void
@@ -111,6 +111,8 @@ class Index extends Component
 
     public function delete(int $id): void
     {
+        $this->authorize('owner');
+
         $customer = Customer::findOrFail($id);
         if ($customer->sales()->exists()) {
             session()->flash('error', 'Pelanggan memiliki riwayat transaksi dan tidak dapat dihapus.');

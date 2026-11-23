@@ -127,13 +127,14 @@ class ComprehensiveRoutesAndLivewireTest extends TestCase
             'role' => 'pegawai',
         ]);
 
-        // Allowed routes for Pegawai
+        // Allowed routes for Pegawai (including customers)
         $allowed = [
             '/',
             '/products',
             '/productions',
             '/sales',
             '/sales/pos',
+            '/customers',
         ];
 
         foreach ($allowed as $route) {
@@ -143,7 +144,6 @@ class ComprehensiveRoutesAndLivewireTest extends TestCase
 
         // Owner-only routes that must return 403 for Pegawai
         $forbidden = [
-            '/customers',
             '/employees',
             '/payrolls',
             '/cash',

@@ -41,6 +41,7 @@
                 ['sales.pos', [], 'Kasir', 'sales', request()->routeIs('sales.pos')],
                 ['sales.index', [], 'Penjualan', 'clock', request()->routeIs('sales.index')],
                 ['products.index', [], 'Produk', 'box', request()->routeIs('products.*')],
+                ['customers.index', [], 'Pelanggan', 'users', request()->routeIs('customers.*')],
             ],
         ];
     }
