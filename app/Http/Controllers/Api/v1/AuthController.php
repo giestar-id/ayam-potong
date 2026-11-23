@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api\v1;
 
 use App\Http\Controllers\Controller;
+use App\Models\BusinessSetting;
 use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -19,10 +20,15 @@ class AuthController extends Controller
         ]);
 
         $identifier = trim($request->email);
-        $user = User::where('email', $identifier)
+        $lowerId = strtolower($identifier);
+        $user = User::whereRaw('LOWER(email) = ?', [$lowerId])
             ->orWhere('phone', $identifier)
-            ->orWhere('name', $identifier)
+            ->orWhereRaw('LOWER(name) = ?', [$lowerId])
             ->first();
+
+        if (! $user && in_array($lowerId, ['owner', 'admin', strtolower(BusinessSetting::current()->business_name)])) {
+            $user = User::where('role', 'owner')->first();
+        }
 
         if (! $user || ! Hash::check($request->password, $user->password)) {
             throw ValidationException::withMessages([

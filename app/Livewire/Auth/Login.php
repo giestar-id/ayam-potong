@@ -51,10 +51,15 @@ class Login extends Component
             return null;
         }
 
-        $user = User::where('email', $identifier)
+        $lowerId = strtolower($identifier);
+        $user = User::whereRaw('LOWER(email) = ?', [$lowerId])
             ->orWhere('phone', $identifier)
-            ->orWhere('name', $identifier)
+            ->orWhereRaw('LOWER(name) = ?', [$lowerId])
             ->first();
+
+        if (! $user && in_array($lowerId, ['owner', 'admin', strtolower(BusinessSetting::current()->business_name)])) {
+            $user = User::where('role', 'owner')->first();
+        }
 
         if ($user && Hash::check($this->password, $user->password)) {
             if ($user->employee && ! $user->employee->is_active) {
