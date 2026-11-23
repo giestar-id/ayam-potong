@@ -125,7 +125,7 @@
 
                     <label class="field">
                         {{ $employeeId ? 'Ganti kata sandi / password baru' : 'Kata sandi / password login *' }}
-                        <input wire:model="password" type="text" class="input text-xs" placeholder="{{ $employeeId ? 'Kosongkan jika tidak ingin mengubah password' : 'Minimal 4 karakter' }}" {{ $employeeId ? '' : 'required' }}>
+                        <input wire:model="password" type="password" class="input text-xs" placeholder="{{ $employeeId ? 'Kosongkan jika tidak ingin mengubah password' : 'Minimal 4 karakter' }}" {{ $employeeId ? '' : 'required' }}>
                         @if($employeeId)
                             <span class="text-[10px] text-brand-textGray block mt-0.5">Biarkan kosong jika tetap menggunakan password lama.</span>
                         @endif
