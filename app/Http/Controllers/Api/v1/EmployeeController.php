@@ -9,6 +9,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 
 class EmployeeController extends Controller
@@ -70,14 +71,13 @@ class EmployeeController extends Controller
 
         $validated = $request->validate([
             'name' => 'required|string|max:255',
-            'phone' => 'required|string|max:30|unique:users,phone',
+            'phone' => 'nullable|string|max:30|unique:users,phone',
             'password' => 'required|string|min:4',
             'position' => 'nullable|string|max:255',
             'daily_rate' => 'nullable|numeric|min:0',
             'is_active' => 'nullable|boolean',
         ], [
             'name.required' => 'Nama pegawai wajib diisi.',
-            'phone.required' => 'Nomor HP pegawai wajib diisi.',
             'phone.unique' => 'Nomor HP sudah terdaftar untuk pengguna lain.',
             'password.required' => 'Kata sandi wajib diisi untuk akun pegawai.',
             'password.min' => 'Kata sandi minimal 4 karakter.',
@@ -85,16 +85,17 @@ class EmployeeController extends Controller
             'daily_rate.min' => 'Gaji harian tidak boleh negatif.',
         ]);
 
-        $phone = trim($validated['phone']);
+        $phone = ! empty($validated['phone']) ? trim($validated['phone']) : null;
+        $email = $phone ? $phone.'@ayampotong.com' : Str::slug($validated['name']).'_'.Str::random(5).'@ayampotong.com';
         $password = $validated['password'];
         $dailyRate = isset($validated['daily_rate']) ? (float) $validated['daily_rate'] : 0;
         $position = ! empty($validated['position']) ? trim($validated['position']) : 'Pegawai';
 
-        $employee = DB::transaction(function () use ($validated, $phone, $password, $dailyRate, $position, $request) {
+        $employee = DB::transaction(function () use ($validated, $phone, $email, $password, $dailyRate, $position, $request) {
             $user = User::create([
                 'name' => $validated['name'],
                 'phone' => $phone,
-                'email' => $phone.'@ayampotong.com',
+                'email' => $email,
                 'password' => Hash::make($password),
                 'role' => 'pegawai',
             ]);
@@ -135,21 +136,20 @@ class EmployeeController extends Controller
 
         $validated = $request->validate([
             'name' => 'required|string|max:255',
-            'phone' => ['required', 'string', 'max:30', Rule::unique('users', 'phone')->ignore($employee->user_id)],
+            'phone' => ['nullable', 'string', 'max:30', Rule::unique('users', 'phone')->ignore($employee->user_id)],
             'password' => 'nullable|string|min:4',
             'position' => 'nullable|string|max:255',
             'daily_rate' => 'nullable|numeric|min:0',
             'is_active' => 'nullable|boolean',
         ], [
             'name.required' => 'Nama pegawai wajib diisi.',
-            'phone.required' => 'Nomor HP pegawai wajib diisi.',
             'phone.unique' => 'Nomor HP sudah terdaftar untuk pengguna lain.',
             'password.min' => 'Kata sandi minimal 4 karakter.',
             'daily_rate.numeric' => 'Gaji harian harus berupa nominal angka.',
             'daily_rate.min' => 'Gaji harian tidak boleh negatif.',
         ]);
 
-        $phone = trim($validated['phone']);
+        $phone = ! empty($validated['phone']) ? trim($validated['phone']) : null;
 
         DB::transaction(function () use ($employee, $validated, $phone, $request) {
             $updateData = [
@@ -170,7 +170,9 @@ class EmployeeController extends Controller
             if ($employee->user_id && $user = User::find($employee->user_id)) {
                 $user->name = $validated['name'];
                 $user->phone = $phone;
-                $user->email = $phone.'@ayampotong.com';
+                if ($phone) {
+                    $user->email = $phone.'@ayampotong.com';
+                }
                 if (! empty($validated['password'])) {
                     $user->password = Hash::make($validated['password']);
                     $user->tokens()->delete();

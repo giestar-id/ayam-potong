@@ -33,7 +33,7 @@ class Customer extends Model
     public function getActiveDebtAttribute(): float
     {
         return (float) $this->sales()
-            ->whereIn('payment_status', ['partial', 'unpaid'])
+            ->where('remaining_debt', '>', 0)
             ->sum('remaining_debt');
     }
 

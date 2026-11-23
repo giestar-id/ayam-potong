@@ -97,7 +97,7 @@ class CashFlowService
             $totalExpense = (float) (clone $cashQuery)->where('type', 'expense')->sum('amount');
             $netCash = $totalIncome - $totalExpense;
 
-            $totalDebt = (float) Sale::whereIn('payment_status', ['partial', 'unpaid'])->sum('remaining_debt');
+            $totalDebt = (float) Sale::where('remaining_debt', '>', 0)->sum('remaining_debt');
             $salesCount = $salesQuery->count();
 
             // Grafik Arus Kas 7 Hari Terakhir
@@ -187,14 +187,21 @@ class CashFlowService
             ->take(10)
             ->get();
 
-        // Produksi Aktif (Status active)
-        $activeProductions = ProductionBatch::where('status', 'active')
+        // Produksi Terakhir (Aktif atau Batch Terbaru untuk sinkronisasi dashboard POS)
+        $activeProductions = ProductionBatch::with(['outputs.product'])
             ->latest('production_date')
+            ->latest('id')
+            ->take(5)
             ->get();
 
-        // Piutang Jatuh Tempo (H-3 atau sudah lewat jatuh tempo)
+        $activeProductions->each(function (ProductionBatch $b) {
+            $b->pos_summary = $b->getPosSummary();
+            $b->effective_buy_price_per_kg = $b->effective_buy_price_per_kg;
+        });
+
+        // Piutang Jatuh Tempo (Sisa piutang > 0 dan H-3 atau sudah lewat jatuh tempo)
         $maturingDebts = Sale::with('customer')
-            ->whereIn('payment_status', ['partial', 'unpaid'])
+            ->where('remaining_debt', '>', 0)
             ->whereNotNull('due_date')
             ->whereDate('due_date', '<=', now()->addDays(3)->toDateString())
             ->orderBy('due_date', 'asc')

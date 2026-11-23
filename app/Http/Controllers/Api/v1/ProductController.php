@@ -48,13 +48,6 @@ class ProductController extends Controller
 
     public function store(Request $request): JsonResponse
     {
-        if (! $request->user()?->isOwner()) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Hanya pemilik (Owner) yang memiliki hak akses untuk menambahkan produk katalog.',
-            ], 403);
-        }
-
         $validated = $request->validate([
             'sku' => 'nullable|string|max:50|unique:products,sku',
             'name' => 'required|string|max:255',

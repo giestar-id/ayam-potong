@@ -53,6 +53,7 @@ class Login extends Component
 
         $user = User::where('email', $identifier)
             ->orWhere('phone', $identifier)
+            ->orWhere('name', $identifier)
             ->first();
 
         if ($user && Hash::check($this->password, $user->password)) {

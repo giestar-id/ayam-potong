@@ -67,6 +67,22 @@ class ProductionController extends Controller
             $validated['raw_material_cost'] = $validated['total_cost'];
         }
 
+        // Cegah double batch jika ada request identik dalam selang 5 detik terakhir
+        $recentDuplicate = ProductionBatch::where('live_weight_kg', $validated['live_weight_kg'])
+            ->where('created_at', '>=', now()->subSeconds(5))
+            ->first();
+
+        if ($recentDuplicate) {
+            $recentDuplicate->pos_summary = $recentDuplicate->getPosSummary();
+            $recentDuplicate->effective_buy_price_per_kg = $recentDuplicate->effective_buy_price_per_kg;
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Batch produksi sudah dibuat.',
+                'data' => $recentDuplicate,
+            ], 200);
+        }
+
         $batch = $this->productionService->createBatch($validated);
         $batch->pos_summary = $batch->getPosSummary();
         $batch->effective_buy_price_per_kg = $batch->effective_buy_price_per_kg;

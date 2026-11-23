@@ -12,6 +12,9 @@
                 @endif
             </div>
             <p class="text-xs text-brand-textGray mt-1">Tanggal produksi: {{ $batch->production_date ? $batch->production_date->translatedFormat('d F Y') : '-' }}</p>
+            @if(!empty($batch->notes))
+                <p class="text-xs text-slate-600 mt-1.5 bg-amber-50 border border-amber-200 rounded px-2.5 py-1 inline-block"><strong>Catatan:</strong> {{ $batch->notes }}</p>
+            @endif
         </div>
         <div class="flex items-center gap-2">
             <button
