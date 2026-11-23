@@ -3,6 +3,7 @@
 namespace App\Livewire\Customers;
 
 use App\Models\Customer;
+use App\Models\Sale;
 use Illuminate\View\View;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Locked;
@@ -145,7 +146,7 @@ class Index extends Component
             'customers' => $customers,
             'detailCustomer' => $detailCustomer,
             'totalCustomers' => Customer::count(),
-            'totalActiveDebt' => Customer::get()->sum('active_debt'),
+            'totalActiveDebt' => (float) Sale::where('remaining_debt', '>', 0)->sum('remaining_debt'),
         ]);
     }
 }

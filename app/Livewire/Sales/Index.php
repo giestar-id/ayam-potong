@@ -135,7 +135,7 @@ class Index extends Component
             'totalSalesCount' => Sale::count(),
             'totalRevenue' => Sale::sum('grand_total'),
             'totalPaid' => Sale::sum('paid_amount'),
-            'totalRemainingDebt' => Sale::whereIn('payment_status', ['partial', 'unpaid'])->sum('remaining_debt'),
+            'totalRemainingDebt' => (float) Sale::where('remaining_debt', '>', 0)->sum('remaining_debt'),
             'todayRevenue' => $todayRevenue,
             'todaySoldKg' => $todaySoldKg,
             'usedBatchKg' => $usedBatchKg,
