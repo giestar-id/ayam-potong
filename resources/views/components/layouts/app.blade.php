@@ -46,7 +46,7 @@
         ];
     }
 @endphp
-<body x-data="{ menuOpen: false }" @keydown.escape.window="menuOpen = false">
+<body x-data="{ menuOpen: false }" @keydown.escape.window="menuOpen = false" class="overflow-x-hidden">
 <x-notification/>
 <x-confirmation-dialog/>
 <a href="#main-content" class="sr-only focus:not-sr-only focus:fixed focus:left-3 focus:top-3 focus:z-[60] focus:rounded-lg focus:bg-white focus:p-3">Langsung ke konten</a>
@@ -98,7 +98,7 @@
             @endif
         </div>
     </header>
-    <main id="main-content" class="mx-auto max-w-[1600px] px-4 py-6 sm:px-6">{{ $slot }}</main>
+    <main id="main-content" class="mx-auto max-w-[1600px] px-4 py-6 sm:px-6 min-w-0 max-w-full overflow-x-hidden">{{ $slot }}</main>
     <footer class="no-print mx-4 flex justify-between gap-3 border-t border-[#dfe3e7] py-5 text-[10px] text-brand-textGray sm:mx-6">
         <span>{{ $biz->business_name }} · Sistem Manajemen & POS Ayam Potong</span>
         <span>Waktu Indonesia Barat (WIB)</span>

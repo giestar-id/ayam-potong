@@ -55,6 +55,11 @@ class Form extends Component
         }
     }
 
+    public function removeImage(): void
+    {
+        $this->image = null;
+    }
+
     public function save(ProductService $productService): mixed
     {
         $this->validate([
