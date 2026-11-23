@@ -52,6 +52,17 @@ class Pos extends Component
         }
     }
 
+    public static function roundToNearestThousand(float $amount): float
+    {
+        if ($amount <= 0) {
+            return 0.0;
+        }
+
+        $rounded = round($amount, -3);
+
+        return $rounded <= 0 ? 1000.0 : (float) $rounded;
+    }
+
     public function addToCart(int $productId): void
     {
         $product = Product::where('is_active', true)->findOrFail($productId);
@@ -71,7 +82,7 @@ class Pos extends Component
                 return;
             }
             $this->cart[$productId]['qty'] = $newQty;
-            $this->cart[$productId]['subtotal'] = round($newQty * $this->cart[$productId]['price'], 2);
+            $this->cart[$productId]['subtotal'] = self::roundToNearestThousand($newQty * $this->cart[$productId]['price']);
         } else {
             $this->cart[$productId] = [
                 'id' => $product->id,
@@ -79,7 +90,7 @@ class Pos extends Component
                 'unit' => $product->unit,
                 'price' => (float) $product->selling_price,
                 'qty' => 1.0,
-                'subtotal' => (float) $product->selling_price,
+                'subtotal' => self::roundToNearestThousand((float) $product->selling_price),
                 'notes' => '',
             ];
         }
@@ -104,7 +115,7 @@ class Pos extends Component
 
         if (isset($this->cart[$productId])) {
             $this->cart[$productId]['qty'] = $qty;
-            $this->cart[$productId]['subtotal'] = round($qty * $this->cart[$productId]['price'], 2);
+            $this->cart[$productId]['subtotal'] = self::roundToNearestThousand($qty * $this->cart[$productId]['price']);
         }
 
         $this->syncPaidAmount();
@@ -149,7 +160,7 @@ class Pos extends Component
             $subtotal += (float) ($item['subtotal'] ?? 0);
         }
 
-        return round($subtotal, 2);
+        return self::roundToNearestThousand($subtotal);
     }
 
     public function getDiscountAmount(): float
@@ -167,7 +178,7 @@ class Pos extends Component
 
     public function getGrandTotal(): float
     {
-        return max(0.0, round($this->getSubtotal() - $this->getDiscountAmount(), 2));
+        return max(0.0, self::roundToNearestThousand($this->getSubtotal() - $this->getDiscountAmount()));
     }
 
     public function getChangeAmount(): float
@@ -175,7 +186,7 @@ class Pos extends Component
         $grandTotal = $this->getGrandTotal();
         $paid = (float) $this->paid_amount;
         if ($paid > $grandTotal) {
-            return round($paid - $grandTotal, 2);
+            return round($paid - $grandTotal);
         }
 
         return 0.0;
@@ -186,7 +197,7 @@ class Pos extends Component
         $grandTotal = $this->getGrandTotal();
         $paid = (float) $this->paid_amount;
         if ($paid < $grandTotal) {
-            return round($grandTotal - $paid, 2);
+            return round($grandTotal - $paid);
         }
 
         return 0.0;

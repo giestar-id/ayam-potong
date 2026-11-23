@@ -24,6 +24,23 @@ class TransactionService
     }
 
     /**
+     * Aturan pembulatan ke ribuan terdekat:
+     * - Ratusan < 500 (misal: 32.100, 32.300) dibulatkan ke bawah menjadi 32.000
+     * - Ratusan >= 500 (misal: 32.500, 32.800) dibulatkan ke atas menjadi 33.000
+     * - Minimal 1.000 jika nominal > 0 agar barang tidak gratis (Rp 0)
+     */
+    public static function roundToNearestThousand(float $amount): float
+    {
+        if ($amount <= 0) {
+            return 0.0;
+        }
+
+        $rounded = round($amount, -3);
+
+        return $rounded <= 0 ? 1000.0 : (float) $rounded;
+    }
+
+    /**
      * Checkout Transaksi Kasir POS (PRD 3.4 & 1.2 ACID / Locking)
      */
     public function createSale(array $data, ?User $user = null): Sale
@@ -62,7 +79,7 @@ class TransactionService
                     ? (float) $item['unit_price']
                     : (float) $product->selling_price;
 
-                $lineSubtotal = round($requestedQty * $unitPrice, 2);
+                $lineSubtotal = self::roundToNearestThousand($requestedQty * $unitPrice);
                 $subtotal += $lineSubtotal;
 
                 $lineItems[] = [
@@ -93,7 +110,7 @@ class TransactionService
                 $discountAmount = min($subtotal, round($discountValue, 2));
             }
 
-            $grandTotal = max(0.0, round($subtotal - $discountAmount, 2));
+            $grandTotal = max(0.0, self::roundToNearestThousand($subtotal - $discountAmount));
             $paidAmount = (float) ($data['paid_amount'] ?? 0);
 
             // 3. Evaluasi Status Pembayaran (Lunas vs Piutang)
@@ -110,7 +127,7 @@ class TransactionService
                     throw new InvalidArgumentException('Transaksi piutang wajib mengisi tanggal jatuh tempo.');
                 }
 
-                $remainingDebt = round($grandTotal - $paidAmount, 2);
+                $remainingDebt = max(0.0, round($grandTotal - $paidAmount));
                 $paymentStatus = $paidAmount > 0 ? 'partial' : 'unpaid';
             }
 

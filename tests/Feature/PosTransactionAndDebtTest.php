@@ -62,9 +62,9 @@ class PosTransactionAndDebtTest extends TestCase
 
     public function test_pos_sale_calculates_discount_reduces_stock_and_records_cash_income(): void
     {
-        // Customer buys 4.5 kg of Fillet Ayam (4.5 * 45,000 = 202,500)
-        // With 10% customer discount = 20,250 discount -> grand total = 182,250
-        // Customer pays 200,000 in cash -> change = 17,750
+        // Customer buys 4.5 kg of Fillet Ayam (4.5 * 45,000 = 202,500 -> dibulatkan ke ribuan = 203,000)
+        // With 10% customer discount = 20,300 discount -> grand total = 182,700 -> dibulatkan ke ribuan = 183,000
+        // Customer pays 200,000 in cash -> change = 17,000
         $items = [
             [
                 'product_id' => $this->productAyam->id,
@@ -79,9 +79,9 @@ class PosTransactionAndDebtTest extends TestCase
             'items' => $items,
         ], $this->user);
 
-        $this->assertEquals(202500, (float) $sale->subtotal);
-        $this->assertEquals(20250, (float) $sale->discount_amount);
-        $this->assertEquals(182250, (float) $sale->grand_total);
+        $this->assertEquals(203000, (float) $sale->subtotal);
+        $this->assertEquals(20300, (float) $sale->discount_amount);
+        $this->assertEquals(183000, (float) $sale->grand_total);
         $this->assertEquals(200000, (float) $sale->paid_amount);
         $this->assertEquals(0, (float) $sale->remaining_debt);
         $this->assertEquals('paid', $sale->payment_status);
@@ -90,11 +90,11 @@ class PosTransactionAndDebtTest extends TestCase
         $this->productAyam->refresh();
         $this->assertEquals(45.5, (float) $this->productAyam->stock);
 
-        // Verify cash flow recorded income of 182,250
+        // Verify cash flow recorded income of 183,000
         $this->assertDatabaseHas('cash_flows', [
             'type' => 'income',
             'category' => 'sales',
-            'amount' => 182250,
+            'amount' => 183000,
         ]);
     }
 
