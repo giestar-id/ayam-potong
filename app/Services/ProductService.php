@@ -21,6 +21,7 @@ class ProductService
             'min_stock' => $data['min_stock'] ?? 5,
             'average_cost' => $data['average_cost'] ?? 0,
             'selling_price' => $data['selling_price'] ?? 0,
+            'image' => $data['image'] ?? null,
             'is_active' => $data['is_active'] ?? true,
         ]);
 
@@ -39,6 +40,7 @@ class ProductService
             'min_stock' => $data['min_stock'] ?? $product->min_stock,
             'average_cost' => $data['average_cost'] ?? $product->average_cost,
             'selling_price' => $data['selling_price'] ?? $product->selling_price,
+            'image' => array_key_exists('image', $data) ? $data['image'] : $product->image,
             'is_active' => $data['is_active'] ?? $product->is_active,
         ]);
 

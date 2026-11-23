@@ -17,7 +17,12 @@ class Product extends Model
         'min_stock',
         'average_cost',
         'selling_price',
+        'image',
         'is_active',
+    ];
+
+    protected $appends = [
+        'image_url',
     ];
 
     protected function casts(): array
@@ -49,5 +54,18 @@ class Product extends Model
     public function getIsLowStockAttribute(): bool
     {
         return (float) $this->stock <= (float) $this->min_stock;
+    }
+
+    public function getImageUrlAttribute(): ?string
+    {
+        if (! $this->image) {
+            return null;
+        }
+
+        if (str_starts_with($this->image, 'http://') || str_starts_with($this->image, 'https://') || str_starts_with($this->image, 'data:')) {
+            return $this->image;
+        }
+
+        return asset('storage/'.$this->image);
     }
 }

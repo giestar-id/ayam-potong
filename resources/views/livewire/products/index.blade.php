@@ -107,7 +107,16 @@
                     @forelse($products as $product)
                         <tr wire:key="product-{{ $product->id }}">
                             <td>
-                                <a href="{{ route('products.form', $product->id) }}" class="font-semibold text-brand-primary">{{ $product->name }}</a>
+                                <div class="flex items-center gap-3">
+                                    @if($product->image_url)
+                                        <img src="{{ $product->image_url }}" alt="{{ $product->name }}" class="h-10 w-10 shrink-0 rounded-lg object-cover border border-brand-border">
+                                    @else
+                                        <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-[#eef4ff] text-brand-primary">
+                                            <x-icon name="box" class="h-5 w-5"/>
+                                        </div>
+                                    @endif
+                                    <a href="{{ route('products.form', $product->id) }}" class="font-semibold text-brand-primary hover:underline">{{ $product->name }}</a>
+                                </div>
                             </td>
                             <td>{{ $product->unit === 'kg' ? 'Kilogram (kg)' : 'Ekor' }}</td>
                             <td class="text-right font-semibold">

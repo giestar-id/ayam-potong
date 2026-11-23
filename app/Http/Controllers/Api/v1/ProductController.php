@@ -7,6 +7,8 @@ use App\Models\Product;
 use App\Services\ProductService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 
 class ProductController extends Controller
 {
@@ -56,8 +58,27 @@ class ProductController extends Controller
             'min_stock' => 'nullable|numeric|min:0',
             'average_cost' => 'nullable|numeric|min:0',
             'selling_price' => 'required|numeric|min:0',
+            'image' => 'nullable',
             'is_active' => 'nullable|boolean',
         ]);
+
+        if ($request->hasFile('image')) {
+            $validated['image'] = $request->file('image')->store('products', 'public');
+        } elseif ($request->filled('image') && is_string($request->image)) {
+            $rawImage = $request->image;
+            if (str_starts_with($rawImage, 'data:image')) {
+                if (preg_match('/^data:image\/(\w+);base64,/', $rawImage, $type)) {
+                    $rawImage = substr($rawImage, strpos($rawImage, ',') + 1);
+                    $ext = strtolower($type[1]) === 'jpeg' ? 'jpg' : strtolower($type[1]);
+                    $decoded = base64_decode($rawImage);
+                    $fileName = 'products/'.Str::uuid().'.'.$ext;
+                    Storage::disk('public')->put($fileName, $decoded);
+                    $validated['image'] = $fileName;
+                }
+            } elseif (str_starts_with($rawImage, 'http://') || str_starts_with($rawImage, 'https://') || str_starts_with($rawImage, 'products/')) {
+                $validated['image'] = $rawImage;
+            }
+        }
 
         // Cegah duplikasi produk jika nama dan satuan sama
         $trimmedName = trim($validated['name']);
@@ -94,8 +115,27 @@ class ProductController extends Controller
             'min_stock' => 'nullable|numeric|min:0',
             'average_cost' => 'nullable|numeric|min:0',
             'selling_price' => 'sometimes|required|numeric|min:0',
+            'image' => 'nullable',
             'is_active' => 'nullable|boolean',
         ]);
+
+        if ($request->hasFile('image')) {
+            $validated['image'] = $request->file('image')->store('products', 'public');
+        } elseif ($request->filled('image') && is_string($request->image)) {
+            $rawImage = $request->image;
+            if (str_starts_with($rawImage, 'data:image')) {
+                if (preg_match('/^data:image\/(\w+);base64,/', $rawImage, $type)) {
+                    $rawImage = substr($rawImage, strpos($rawImage, ',') + 1);
+                    $ext = strtolower($type[1]) === 'jpeg' ? 'jpg' : strtolower($type[1]);
+                    $decoded = base64_decode($rawImage);
+                    $fileName = 'products/'.Str::uuid().'.'.$ext;
+                    Storage::disk('public')->put($fileName, $decoded);
+                    $validated['image'] = $fileName;
+                }
+            } elseif (str_starts_with($rawImage, 'http://') || str_starts_with($rawImage, 'https://') || str_starts_with($rawImage, 'products/')) {
+                $validated['image'] = $rawImage;
+            }
+        }
 
         $product = $this->productService->updateProduct($product, $validated);
 

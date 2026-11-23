@@ -19,6 +19,26 @@
                 @error('name') <span class="text-xs text-red-600">{{ $message }}</span> @enderror
             </label>
 
+            <div class="field">
+                <span class="font-medium text-brand-textDark">Foto / Gambar Produk</span>
+                <div class="mt-2 flex items-center gap-4">
+                    @if($image)
+                        <img src="{{ $image->temporaryUrl() }}" class="h-20 w-20 rounded-xl object-cover border border-brand-border shadow-sm" alt="Preview Gambar">
+                    @elseif($existingImageUrl)
+                        <img src="{{ $existingImageUrl }}" class="h-20 w-20 rounded-xl object-cover border border-brand-border shadow-sm" alt="Gambar Produk">
+                    @else
+                        <div class="flex h-20 w-20 shrink-0 items-center justify-center rounded-xl border border-dashed border-slate-300 bg-slate-50 text-slate-400">
+                            <x-icon name="box" class="h-8 w-8"/>
+                        </div>
+                    @endif
+                    <div class="flex-1">
+                        <input type="file" wire:model="image" accept="image/*" class="file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-brand-primary file:text-white hover:file:bg-brand-primaryDark text-xs text-brand-textGray">
+                        <p class="mt-1 text-[11px] text-brand-textGray">Maksimal 2MB (JPG, PNG, WEBP). Gambar akan ditampilkan di kartu produk kasir POS.</p>
+                        @error('image') <span class="text-xs text-red-600">{{ $message }}</span> @enderror
+                    </div>
+                </div>
+            </div>
+
             <div class="grid gap-5 sm:grid-cols-2">
                 <label class="field">
                     Harga jual standar (Rp / kg) *

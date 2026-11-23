@@ -41,12 +41,18 @@
                 @forelse($products as $product)
                     @php($inCart = isset($cart[$product->id]))
                     <button type="button" wire:key="product-{{ $product->id }}" wire:click="addToCart({{ $product->id }})" wire:loading.attr="disabled" wire:target="addToCart({{ $product->id }}),clearCart,checkout" @class(['pos-product-card group p-3 sm:p-3', 'is-selected' => $inCart]) aria-label="Tambah {{ $product->name }} ke keranjang{{ $inCart ? ' (sudah dipilih)' : '' }}">
-                        <span class="mb-2.5 flex items-center justify-between gap-2">
-                            <span class="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-[#eef4ff] text-brand-primary">
-                                <x-icon name="box" class="h-4 w-4"/>
+                        <div class="relative mb-2.5 h-24 w-full overflow-hidden rounded-lg bg-slate-100">
+                            @if($product->image_url)
+                                <img src="{{ $product->image_url }}" alt="{{ $product->name }}" class="h-full w-full object-cover transition-transform duration-200 group-hover:scale-105" loading="lazy">
+                            @else
+                                <div class="flex h-full w-full items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-50 text-brand-primary">
+                                    <x-icon name="box" class="h-7 w-7 opacity-60"/>
+                                </div>
+                            @endif
+                            <span class="absolute top-1.5 right-1.5 truncate rounded-md bg-white/90 px-1.5 py-0.5 text-[9px] font-semibold text-brand-textDark shadow-sm backdrop-blur-sm">
+                                {{ $product->unit === 'kg' ? 'Kiloan' : 'Satuan' }}
                             </span>
-                            <span class="truncate rounded-md bg-[#f0f4f8] px-2 py-1 text-[9px] font-medium text-brand-textGray">{{ $product->unit === 'kg' ? 'Kiloan' : 'Satuan' }}</span>
-                        </span>
+                        </div>
                         <span class="line-clamp-2 min-h-8 font-heading text-xs font-semibold leading-4 text-brand-textDark">{{ $product->name }}</span>
                         <span class="mt-1 truncate text-[10px] text-[#747780]">{{ $product->sku ?? '-' }}</span>
                         <span class="mt-2 flex items-start gap-1.5 text-[10px] leading-4 text-brand-textGray">

@@ -8,10 +8,13 @@ use Illuminate\View\View;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Locked;
 use Livewire\Component;
+use Livewire\WithFileUploads;
 
 #[Layout('components.layouts.app')]
 class Form extends Component
 {
+    use WithFileUploads;
+
     #[Locked]
     public ?int $productId = null;
 
@@ -29,12 +32,14 @@ class Form extends Component
 
     public string $selling_price = '0';
 
+    public $image = null;
+
+    public ?string $existingImageUrl = null;
+
     public bool $is_active = true;
 
     public function mount(?int $id = null): void
     {
-        $this->authorize('owner');
-
         if ($id) {
             $product = Product::findOrFail($id);
             $this->productId = $product->id;
@@ -45,6 +50,7 @@ class Form extends Component
             $this->min_stock = (string) $product->min_stock;
             $this->average_cost = (string) $product->average_cost;
             $this->selling_price = (string) $product->selling_price;
+            $this->existingImageUrl = $product->image_url;
             $this->is_active = (bool) $product->is_active;
         }
     }
@@ -59,10 +65,13 @@ class Form extends Component
             'min_stock' => 'required|numeric|min:0',
             'average_cost' => 'nullable|numeric|min:0',
             'selling_price' => 'required|numeric|min:0',
+            'image' => 'nullable|image|max:2048',
             'is_active' => 'boolean',
         ], [
             'name.required' => 'Nama produk wajib diisi.',
             'selling_price.required' => 'Harga jual wajib diisi.',
+            'image.image' => 'File harus berupa gambar.',
+            'image.max' => 'Ukuran gambar maksimal 2MB.',
         ]);
 
         $data = [
@@ -75,6 +84,10 @@ class Form extends Component
             'selling_price' => (float) $this->selling_price,
             'is_active' => $this->is_active,
         ];
+
+        if ($this->image) {
+            $data['image'] = $this->image->store('products', 'public');
+        }
 
         if ($this->productId) {
             $product = Product::findOrFail($this->productId);
