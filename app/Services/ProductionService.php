@@ -55,7 +55,17 @@ class ProductionService
         }
 
         $remainingWeight = (float) ($data['remaining_weight_kg'] ?? 0);
-        $date = $data['production_date'] ?? now()->toDateString();
+        $date = ! empty($data['production_date'])
+            ? Carbon::parse($data['production_date'])->toDateString()
+            : now()->toDateString();
+
+        $existingSameDay = ProductionBatch::whereDate('production_date', $date)->first();
+        if ($existingSameDay) {
+            throw new InvalidArgumentException(
+                "Batch untuk tanggal {$date} sudah ada ({$existingSameDay->batch_number}). Dalam satu hari hanya diperbolehkan membuat 1 batch produksi."
+            );
+        }
+
         $rawBatchNumber = ! empty($data['batch_number']) ? trim($data['batch_number']) : null;
         $batchNumber = $rawBatchNumber ?: $this->generateBatchNumber($date);
 

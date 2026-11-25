@@ -83,7 +83,15 @@ class ProductionController extends Controller
             ], 200);
         }
 
-        $batch = $this->productionService->createBatch($validated);
+        try {
+            $batch = $this->productionService->createBatch($validated);
+        } catch (\InvalidArgumentException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => $e->getMessage(),
+            ], 422);
+        }
+
         $batch->pos_summary = $batch->getPosSummary();
         $batch->effective_buy_price_per_kg = $batch->effective_buy_price_per_kg;
 

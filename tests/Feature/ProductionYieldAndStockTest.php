@@ -134,4 +134,29 @@ class ProductionYieldAndStockTest extends TestCase
             'average_weight_per_bird' => 1.8,
         ]);
     }
+
+    public function test_cannot_create_two_batches_on_same_date_even_with_different_names(): void
+    {
+        $user = User::factory()->create(['role' => 'owner']);
+        $today = now()->toDateString();
+
+        $firstResponse = $this->actingAs($user, 'sanctum')->postJson('/api/v1/productions', [
+            'batch_number' => 'Batch Pagi',
+            'production_date' => $today,
+            'live_weight_kg' => 100,
+            'raw_material_cost' => 2400000,
+        ]);
+        $firstResponse->assertStatus(201);
+
+        $secondResponse = $this->actingAs($user, 'sanctum')->postJson('/api/v1/productions', [
+            'batch_number' => 'Batch Sore Berbeda Nama',
+            'production_date' => $today,
+            'live_weight_kg' => 150,
+            'raw_material_cost' => 3600000,
+        ]);
+        $secondResponse->assertStatus(422)
+            ->assertJson(['success' => false]);
+
+        $this->assertDatabaseCount('production_batches', 1);
+    }
 }

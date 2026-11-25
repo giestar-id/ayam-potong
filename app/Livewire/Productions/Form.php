@@ -95,15 +95,22 @@ class Form extends Component
 
         $customBatchNumber = trim($this->batch_number) !== '' ? trim($this->batch_number) : null;
 
-        $batch = $productionService->createBatch([
-            'batch_number' => $customBatchNumber,
-            'production_date' => $this->production_date,
-            'live_weight_kg' => $weight,
-            'buy_price_per_kg' => $pricePerKg,
-            'average_weight_per_bird' => $avgWeight,
-            'raw_material_cost' => $total,
-            'notes' => $this->notes ?: null,
-        ]);
+        try {
+            $batch = $productionService->createBatch([
+                'batch_number' => $customBatchNumber,
+                'production_date' => $this->production_date,
+                'live_weight_kg' => $weight,
+                'buy_price_per_kg' => $pricePerKg,
+                'average_weight_per_bird' => $avgWeight,
+                'raw_material_cost' => $total,
+                'notes' => $this->notes ?: null,
+            ]);
+        } catch (\InvalidArgumentException $e) {
+            $this->addError('batch_number', $e->getMessage());
+            session()->flash('error', $e->getMessage());
+
+            return null;
+        }
 
         session()->flash('success', "Batch produksi {$batch->batch_number} berhasil dibuat ({$batch->live_weight_kg} kg @ Rp ".number_format($batch->buy_price_per_kg, 0, ',', '.').'/kg).');
 
