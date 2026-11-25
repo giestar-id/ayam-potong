@@ -27,7 +27,12 @@ class Form extends Component
     public function mount(ProductionService $productionService): void
     {
         $this->production_date = now()->toDateString();
-        $this->batch_number = $productionService->generateBatchNumber();
+        $this->batch_number = '';
+    }
+
+    public function getDefaultBatchNameProperty(): string
+    {
+        return app(ProductionService::class)->generateBatchNumber($this->production_date ?: now()->toDateString());
     }
 
     public function updatedTotalCost(): void
@@ -71,16 +76,16 @@ class Form extends Component
 
     public function save(ProductionService $productionService): mixed
     {
-        $this->production_date = now()->toDateString();
-
         $this->validate([
             'batch_number' => 'nullable|string|max:100',
-            'production_date' => 'nullable|date',
+            'production_date' => 'required|date',
             'live_weight_kg' => 'required|numeric|gt:0',
             'total_cost' => 'required|numeric|gt:0',
             'average_weight_per_bird' => 'nullable|numeric|gt:0',
             'notes' => 'nullable|string',
         ], [
+            'production_date.required' => 'Tanggal produksi wajib diisi.',
+            'production_date.date' => 'Format tanggal produksi tidak valid.',
             'live_weight_kg.required' => 'Jumlah kilo ayam wajib diisi.',
             'live_weight_kg.gt' => 'Jumlah kilo ayam harus lebih besar dari 0 kg.',
             'total_cost.required' => 'Total modal pembelian ayam wajib diisi.',

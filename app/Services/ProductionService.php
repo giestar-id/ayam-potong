@@ -74,19 +74,36 @@ class ProductionService
             $batchNumber = "{$batchNumber} #{$count}";
         }
 
-        $batch = ProductionBatch::create([
-            'batch_number' => $batchNumber,
-            'production_date' => $date,
-            'status' => 'active',
-            'live_weight_kg' => $liveWeight,
-            'buy_price_per_kg' => $buyPrice,
-            'average_weight_per_bird' => isset($data['average_weight_per_bird']) && (float) $data['average_weight_per_bird'] > 0 ? (float) $data['average_weight_per_bird'] : null,
-            'remaining_weight_kg' => $remainingWeight,
-            'live_bird_count' => $data['live_bird_count'] ?? null,
-            'raw_material_cost' => $rawCost,
-            'additional_cost' => $data['additional_cost'] ?? 0,
-            'notes' => $data['notes'] ?? null,
-        ]);
+        $batch = DB::transaction(function () use ($batchNumber, $date, $liveWeight, $buyPrice, $data, $remainingWeight, $rawCost) {
+            $batch = ProductionBatch::create([
+                'batch_number' => $batchNumber,
+                'production_date' => $date,
+                'status' => 'active',
+                'live_weight_kg' => $liveWeight,
+                'buy_price_per_kg' => $buyPrice,
+                'average_weight_per_bird' => isset($data['average_weight_per_bird']) && (float) $data['average_weight_per_bird'] > 0 ? (float) $data['average_weight_per_bird'] : null,
+                'remaining_weight_kg' => $remainingWeight,
+                'live_bird_count' => $data['live_bird_count'] ?? null,
+                'raw_material_cost' => $rawCost,
+                'additional_cost' => $data['additional_cost'] ?? 0,
+                'notes' => $data['notes'] ?? null,
+            ]);
+
+            // Sinkronisasi langsung modal pembelian ayam hidup ke Buku Kas (Uang Keluar Dashboard)
+            if ($rawCost > 0) {
+                CashFlow::create([
+                    'type' => 'expense',
+                    'category' => 'production_cost',
+                    'reference_type' => ProductionBatch::class,
+                    'reference_id' => $batch->id,
+                    'transaction_date' => $date,
+                    'amount' => $rawCost,
+                    'description' => "Bahan baku ayam hidup: Batch {$batch->batch_number} ({$batch->live_weight_kg} kg)",
+                ]);
+            }
+
+            return $batch;
+        });
 
         $this->invalidateCache();
 
@@ -253,31 +270,47 @@ class ProductionService
             $batch->status = 'completed';
             $batch->save();
 
-            // PRD 3.2 Sinkronisasi Otomatis ke Pengeluaran (CashFlow)
+            // PRD 3.2 Sinkronisasi Otomatis ke Pengeluaran (CashFlow) tanpa duplikasi
             $date = $batch->production_date ? $batch->production_date->toDateString() : now()->toDateString();
 
             if ((float) $batch->raw_material_cost > 0) {
-                CashFlow::create([
-                    'type' => 'expense',
-                    'category' => 'production_cost',
-                    'reference_type' => ProductionBatch::class,
-                    'reference_id' => $batch->id,
-                    'transaction_date' => $date,
-                    'amount' => $batch->raw_material_cost,
-                    'description' => "Bahan baku ayam hidup: Batch {$batch->batch_number} ({$batch->live_weight_kg} kg)",
-                ]);
+                $rawCostAlreadyRecorded = CashFlow::where('reference_type', ProductionBatch::class)
+                    ->where('reference_id', $batch->id)
+                    ->where('category', 'production_cost')
+                    ->where('amount', $batch->raw_material_cost)
+                    ->exists();
+
+                if (! $rawCostAlreadyRecorded) {
+                    CashFlow::create([
+                        'type' => 'expense',
+                        'category' => 'production_cost',
+                        'reference_type' => ProductionBatch::class,
+                        'reference_id' => $batch->id,
+                        'transaction_date' => $date,
+                        'amount' => $batch->raw_material_cost,
+                        'description' => "Bahan baku ayam hidup: Batch {$batch->batch_number} ({$batch->live_weight_kg} kg)",
+                    ]);
+                }
             }
 
             if ((float) $batch->additional_cost > 0) {
-                CashFlow::create([
-                    'type' => 'expense',
-                    'category' => 'production_cost',
-                    'reference_type' => ProductionBatch::class,
-                    'reference_id' => $batch->id,
-                    'transaction_date' => $date,
-                    'amount' => $batch->additional_cost,
-                    'description' => "Biaya operasional produksi: Batch {$batch->batch_number}",
-                ]);
+                $addCostAlreadyRecorded = CashFlow::where('reference_type', ProductionBatch::class)
+                    ->where('reference_id', $batch->id)
+                    ->where('category', 'production_cost')
+                    ->where('description', "Biaya operasional produksi: Batch {$batch->batch_number}")
+                    ->exists();
+
+                if (! $addCostAlreadyRecorded) {
+                    CashFlow::create([
+                        'type' => 'expense',
+                        'category' => 'production_cost',
+                        'reference_type' => ProductionBatch::class,
+                        'reference_id' => $batch->id,
+                        'transaction_date' => $date,
+                        'amount' => $batch->additional_cost,
+                        'description' => "Biaya operasional produksi: Batch {$batch->batch_number}",
+                    ]);
+                }
             }
 
             $this->invalidateCache();

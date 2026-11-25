@@ -158,5 +158,10 @@ class ProductionYieldAndStockTest extends TestCase
             ->assertJson(['success' => false]);
 
         $this->assertDatabaseCount('production_batches', 1);
+        $this->assertDatabaseHas('cash_flows', [
+            'type' => 'expense',
+            'category' => 'production_cost',
+            'amount' => 2400000.0,
+        ]);
     }
 }
