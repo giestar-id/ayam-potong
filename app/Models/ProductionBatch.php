@@ -32,7 +32,7 @@ class ProductionBatch extends Model
     protected function casts(): array
     {
         return [
-            'production_date' => 'date',
+            'production_date' => 'date:Y-m-d',
             'live_weight_kg' => 'decimal:2',
             'buy_price_per_kg' => 'decimal:2',
             'average_weight_per_bird' => 'decimal:2',
