@@ -19,7 +19,7 @@ class DebtPayment extends Model
     protected function casts(): array
     {
         return [
-            'payment_date' => 'date',
+            'payment_date' => 'date:Y-m-d',
             'amount' => 'decimal:2',
         ];
     }

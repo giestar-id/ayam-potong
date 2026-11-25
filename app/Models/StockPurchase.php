@@ -24,7 +24,7 @@ class StockPurchase extends Model
             'quantity' => 'decimal:2',
             'total_cost' => 'decimal:2',
             'cost_per_unit' => 'decimal:2',
-            'purchase_date' => 'date',
+            'purchase_date' => 'date:Y-m-d',
         ];
     }
 
