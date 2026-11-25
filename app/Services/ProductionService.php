@@ -110,6 +110,116 @@ class ProductionService
         return $batch;
     }
 
+    public function updateBatch(ProductionBatch $batch, array $data): ProductionBatch
+    {
+        $liveWeight = (float) ($data['live_weight_kg'] ?? $batch->live_weight_kg);
+        if ($liveWeight <= 0) {
+            throw new InvalidArgumentException('Berat ayam hidup harus lebih besar dari 0 kg.');
+        }
+
+        $buyPrice = isset($data['buy_price_per_kg']) ? (float) $data['buy_price_per_kg'] : 0.0;
+        $rawCost = isset($data['raw_material_cost']) ? (float) $data['raw_material_cost'] : (float) $batch->raw_material_cost;
+
+        if ($rawCost > 0 && $buyPrice <= 0) {
+            $buyPrice = round($rawCost / $liveWeight, 2);
+        } elseif ($buyPrice > 0 && $rawCost <= 0) {
+            $rawCost = round($liveWeight * $buyPrice, 2);
+        } elseif ($rawCost > 0) {
+            $buyPrice = round($rawCost / $liveWeight, 2);
+        }
+
+        $date = ! empty($data['production_date'])
+            ? Carbon::parse($data['production_date'])->toDateString()
+            : ($batch->production_date ? $batch->production_date->toDateString() : now()->toDateString());
+
+        $existingSameDay = ProductionBatch::whereDate('production_date', $date)
+            ->where('id', '!=', $batch->id)
+            ->first();
+        if ($existingSameDay) {
+            throw new InvalidArgumentException(
+                "Batch untuk tanggal {$date} sudah ada ({$existingSameDay->batch_number}). Dalam satu hari hanya diperbolehkan membuat 1 batch produksi."
+            );
+        }
+
+        $rawBatchNumber = array_key_exists('batch_number', $data) && trim((string) $data['batch_number']) !== ''
+            ? trim((string) $data['batch_number'])
+            : null;
+        $batchNumber = $rawBatchNumber ?: $this->generateBatchNumber($date);
+
+        if (ProductionBatch::where('batch_number', $batchNumber)->where('id', '!=', $batch->id)->exists()) {
+            $count = ProductionBatch::where('batch_number', 'like', "{$batchNumber}%")->where('id', '!=', $batch->id)->count() + 1;
+            $batchNumber = "{$batchNumber} #{$count}";
+        }
+
+        $avgWeight = array_key_exists('average_weight_per_bird', $data)
+            ? ((float) $data['average_weight_per_bird'] > 0 ? (float) $data['average_weight_per_bird'] : null)
+            : $batch->average_weight_per_bird;
+
+        $remBirds = (int) ($batch->remaining_bird_count ?? 0);
+        $deadBirds = (int) ($batch->dead_bird_count ?? 0);
+        $remWeight = (float) ($batch->remaining_weight_kg ?? 0.0);
+        $deadWeight = (float) ($batch->dead_weight_kg ?? 0.0);
+
+        if ($avgWeight !== null && $avgWeight > 0) {
+            if ($remBirds > 0) {
+                $remWeight = round($remBirds * $avgWeight, 2);
+            }
+            if ($deadBirds > 0) {
+                $deadWeight = round($deadBirds * $avgWeight, 2);
+            }
+        }
+        $deadCost = ($buyPrice > 0 && $deadWeight > 0) ? round($deadWeight * $buyPrice, 2) : 0.0;
+
+        $updated = DB::transaction(function () use ($batch, $batchNumber, $date, $liveWeight, $buyPrice, $avgWeight, $rawCost, $remWeight, $deadWeight, $deadCost, $data) {
+            $batch->update([
+                'batch_number' => $batchNumber,
+                'production_date' => $date,
+                'live_weight_kg' => $liveWeight,
+                'buy_price_per_kg' => $buyPrice,
+                'average_weight_per_bird' => $avgWeight,
+                'raw_material_cost' => $rawCost,
+                'remaining_weight_kg' => $remWeight,
+                'dead_weight_kg' => $deadWeight,
+                'dead_cost' => $deadCost,
+                'notes' => array_key_exists('notes', $data) ? $data['notes'] : $batch->notes,
+            ]);
+
+            $cashFlow = CashFlow::where('reference_type', ProductionBatch::class)
+                ->where('reference_id', $batch->id)
+                ->where('category', 'production_cost')
+                ->where('description', 'like', 'Bahan baku ayam hidup:%')
+                ->first();
+
+            if ($rawCost > 0) {
+                if ($cashFlow) {
+                    $cashFlow->update([
+                        'transaction_date' => $date,
+                        'amount' => $rawCost,
+                        'description' => "Bahan baku ayam hidup: Batch {$batch->batch_number} ({$batch->live_weight_kg} kg)",
+                    ]);
+                } else {
+                    CashFlow::create([
+                        'type' => 'expense',
+                        'category' => 'production_cost',
+                        'reference_type' => ProductionBatch::class,
+                        'reference_id' => $batch->id,
+                        'transaction_date' => $date,
+                        'amount' => $rawCost,
+                        'description' => "Bahan baku ayam hidup: Batch {$batch->batch_number} ({$batch->live_weight_kg} kg)",
+                    ]);
+                }
+            } elseif ($cashFlow) {
+                $cashFlow->delete();
+            }
+
+            return $batch->fresh('outputs.product');
+        });
+
+        $this->invalidateCache();
+
+        return $updated;
+    }
+
     public function updateRemaining(
         ProductionBatch $batch,
         ?float $remainingWeight = null,

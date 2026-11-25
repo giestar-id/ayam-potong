@@ -102,6 +102,44 @@ class ProductionController extends Controller
         ], 201);
     }
 
+    public function update(Request $request, int $id): JsonResponse
+    {
+        $batch = ProductionBatch::findOrFail($id);
+
+        $validated = $request->validate([
+            'batch_number' => 'nullable|string|max:100|unique:production_batches,batch_number,'.$batch->id,
+            'production_date' => 'nullable|date',
+            'live_weight_kg' => 'required|numeric|gt:0',
+            'buy_price_per_kg' => 'nullable|numeric|min:0',
+            'raw_material_cost' => 'nullable|numeric|min:0',
+            'total_cost' => 'nullable|numeric|min:0',
+            'average_weight_per_bird' => 'nullable|numeric|min:0',
+            'notes' => 'nullable|string',
+        ]);
+
+        if (isset($validated['total_cost']) && empty($validated['raw_material_cost'])) {
+            $validated['raw_material_cost'] = $validated['total_cost'];
+        }
+
+        try {
+            $batch = $this->productionService->updateBatch($batch, $validated);
+        } catch (\InvalidArgumentException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => $e->getMessage(),
+            ], 422);
+        }
+
+        $batch->pos_summary = $batch->getPosSummary();
+        $batch->effective_buy_price_per_kg = $batch->effective_buy_price_per_kg;
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Batch produksi berhasil diperbarui.',
+            'data' => $batch,
+        ]);
+    }
+
     public function updateRemaining(Request $request, int $id): JsonResponse
     {
         $batch = ProductionBatch::findOrFail($id);

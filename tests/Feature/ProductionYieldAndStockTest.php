@@ -163,5 +163,31 @@ class ProductionYieldAndStockTest extends TestCase
             'category' => 'production_cost',
             'amount' => 2400000.0,
         ]);
+
+        // Test update batch via PUT /api/v1/productions/{id}
+        $batchId = $firstResponse->json('data.id');
+        $updateResponse = $this->actingAs($user, 'sanctum')->putJson("/api/v1/productions/{$batchId}", [
+            'batch_number' => 'Batch Pagi Revisi',
+            'production_date' => $today,
+            'live_weight_kg' => 120,
+            'raw_material_cost' => 3000000,
+            'average_weight_per_bird' => 2.0,
+            'notes' => 'Revisi timbangan',
+        ]);
+        $updateResponse->assertStatus(200)
+            ->assertJsonPath('data.batch_number', 'Batch Pagi Revisi');
+
+        $this->assertDatabaseHas('production_batches', [
+            'id' => $batchId,
+            'batch_number' => 'Batch Pagi Revisi',
+            'live_weight_kg' => 120.0,
+            'raw_material_cost' => 3000000.0,
+        ]);
+        $this->assertDatabaseHas('cash_flows', [
+            'type' => 'expense',
+            'category' => 'production_cost',
+            'reference_id' => $batchId,
+            'amount' => 3000000.0,
+        ]);
     }
 }
