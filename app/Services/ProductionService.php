@@ -96,7 +96,7 @@ class ProductionService
         if ($avgWeight !== null && $avgWeight > 0) {
             if ($remainingBirds !== null) {
                 $remainingBirds = max(0, $remainingBirds);
-                $remainingWeight = round($remainingBirds * $avgWeight, 2);
+                $remainingWeight = $remainingWeight !== null ? max(0.0, round($remainingWeight, 2)) : round($remainingBirds * $avgWeight, 2);
             } elseif ($remainingWeight !== null) {
                 $remainingWeight = max(0.0, round($remainingWeight, 2));
                 $remainingBirds = (int) round($remainingWeight / $avgWeight);
@@ -107,7 +107,7 @@ class ProductionService
 
             if ($deadBirds !== null) {
                 $deadBirds = max(0, $deadBirds);
-                $deadWeight = round($deadBirds * $avgWeight, 2);
+                $deadWeight = $deadWeight !== null ? max(0.0, round($deadWeight, 2)) : round($deadBirds * $avgWeight, 2);
             } elseif ($deadWeight !== null) {
                 $deadWeight = max(0.0, round($deadWeight, 2));
                 $deadBirds = (int) round($deadWeight / $avgWeight);
@@ -121,7 +121,7 @@ class ProductionService
             // Owner did not input average weight per bird
             if ($remainingBirds !== null) {
                 $remainingBirds = max(0, $remainingBirds);
-                $remainingWeight = $remainingWeight !== null ? max(0.0, round($remainingWeight, 2)) : 0.0;
+                $remainingWeight = $remainingWeight !== null ? max(0.0, round($remainingWeight, 2)) : (float) ($batch->remaining_weight_kg ?? 0.0);
             } elseif ($remainingWeight !== null) {
                 $remainingWeight = max(0.0, round($remainingWeight, 2));
                 $remainingBirds = $batch->remaining_bird_count ?? 0;
@@ -132,7 +132,7 @@ class ProductionService
 
             if ($deadBirds !== null) {
                 $deadBirds = max(0, $deadBirds);
-                $deadWeight = $deadWeight !== null ? max(0.0, round($deadWeight, 2)) : 0.0;
+                $deadWeight = $deadWeight !== null ? max(0.0, round($deadWeight, 2)) : (float) ($batch->dead_weight_kg ?? 0.0);
             } elseif ($deadWeight !== null) {
                 $deadWeight = max(0.0, round($deadWeight, 2));
                 $deadBirds = $batch->dead_bird_count ?? 0;
@@ -141,7 +141,7 @@ class ProductionService
                 $deadWeight = (float) ($batch->dead_weight_kg ?? 0.0);
             }
 
-            $deadCost = 0.0;
+            $deadCost = ($buyPrice > 0 && $deadWeight > 0) ? round($deadWeight * $buyPrice, 2) : 0.0;
         }
 
         $batch->update([
