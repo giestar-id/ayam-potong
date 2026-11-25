@@ -16,7 +16,7 @@ class SaleController extends Controller
 
     public function index(Request $request): JsonResponse
     {
-        $query = Sale::with(['customer', 'items.product', 'debtPayments']);
+        $query = Sale::with(['customer', 'user', 'items.product', 'debtPayments']);
 
         if ($request->filled('search')) {
             $search = $request->query('search');
